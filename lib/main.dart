@@ -13,7 +13,7 @@ class RecipediaApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Recipedia',
+      title: 'Recipedia_App',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -49,25 +49,25 @@ class _BottomNavBarExampleState extends State<BottomNavBarExample> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold (appBar: AppBar(title: const Text('Recipedia'),), 
-    body: _pages[_selectedIndex], 
-    bottomNavigationBar: BottomNavigationBar(
-      currentIndex: _selectedIndex,
-      onTap: _onItemTapped,
-      backgroundColor: Colors.deepPurple, //set color bg here
-      selectedItemColor: Colors.black, //color of select item
-      unselectedItemColor: Colors.purple.shade200, //colorof unselected
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home',),
-        BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Community',),
-        BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Create',), 
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile',),
-  ],
-  ),
-  );
+    return Scaffold(
+      appBar: AppBar(title: const Text('Recipedia')),
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        backgroundColor: Colors.deepPurple, //set color bg here
+        selectedItemColor: Colors.black, //color of select item
+        unselectedItemColor: Colors.purple.shade200, //colorof unselected
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Community'),
+          BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Create'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
+      ),
+    );
   }
 }
-
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -112,26 +112,28 @@ class ProfileSetupScreen extends StatelessWidget {
 class HomepageScreen extends StatelessWidget {
   const HomepageScreen({super.key});
 
-   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Recipedia Home'),
         actions: [
-          IconButton(icon: const Icon(Icons.people), onPressed: () {
-            Navigator.pushNamed(context, '/community');
-          },
-        ),
+          IconButton(
+            icon: const Icon(Icons.people),
+            onPressed: () {
+              Navigator.pushNamed(context, '/community');
+            },
+          ),
 
-          IconButton(icon: const Icon(Icons.add), onPressed: () {
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
               Navigator.pushNamed(context, '/create');
             },
           ),
         ],
       ),
-      body:const Center(
-        child: Text('Welcome to Recipedia!'),
-      ),
+      body: const Center(child: Text('Welcome to Recipedia!')),
     );
   }
 }
@@ -142,11 +144,9 @@ class CommunityScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Community'),),
+      appBar: AppBar(title: const Text('Community')),
 
-      body:const Center(
-        child: Text('This is the Community page.'),
-      ),
+      body: const Center(child: Text('This is the Community page.')),
     );
   }
 }
@@ -157,11 +157,9 @@ class CreateRecipeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Recipe'),),
+      appBar: AppBar(title: const Text('Create Recipe')),
 
-      body: const Center(
-        child: Text('This is the Create Recipe page.'),
-      ),
+      body: const Center(child: Text('This is the Create Recipe page.')),
     );
   }
 }
