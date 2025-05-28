@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:recipedia/screens/homepage.dart';
-import 'package:recipedia/screens/login.dart';
 
 void main() {
   runApp(const RecipediaApp());
