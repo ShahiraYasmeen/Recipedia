@@ -7,7 +7,7 @@ class HomepageScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Recipedia Home is here!!'),
+        title: const Text('Recipedia Home'),
         actions: [
           IconButton(icon: const Icon(Icons.people), onPressed: () {
             Navigator.pushNamed(context, '/community');
