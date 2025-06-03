@@ -11,7 +11,7 @@ class CommunityScreen extends StatelessWidget {
       ),
 
       body:const Center(
-        child: Text('This is where users can share and find more recipes to cook at home!.hehehhehehehehhehehehb'),
+        child: Text('This is where users can share and find more recipes to cook at home!'),
       ),
     );
   }
