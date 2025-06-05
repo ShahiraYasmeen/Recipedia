@@ -1,36 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'login.dart';
 
-import 'sign_up.dart';
-import '../main.dart';
-import 'forgot_pass.dart'; 
-
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class SignupScreen extends StatefulWidget {
+  const SignupScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _SignupScreenState extends State<SignupScreen> {
+  final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool _obscurePassword = true;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  void _login() async {
+  void _signup() async {
     try {
-      await _auth.signInWithEmailAndPassword(
+      await _auth.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const BottomNavBarExample()),
-      );
+      Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login failed: ${e.toString()}")),
+        SnackBar(content: Text("Signup failed: ${e.toString()}")),
       );
     }
   }
@@ -43,17 +38,12 @@ class _LoginScreenState extends State<LoginScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
         child: Column(
           children: [
-            const Text("Sign in to continue", style: TextStyle(fontSize: 16)),
-            const Text(
-              "Recipedia",
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF8B0000),
-              ),
-            ),
+            const Text("Welcome to", style: TextStyle(fontSize: 16)),
+            const Text("Recipedia",
+                style: TextStyle(
+                    fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF8B0000))),
             const SizedBox(height: 16),
-            Image.asset('assets/logo.png', width: 300),
+            Image.asset('assets/logo.png', width: 220),
             const SizedBox(height: 32),
             Container(
               padding: const EdgeInsets.all(24),
@@ -64,13 +54,12 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "Log in",
-                    style: TextStyle(
-                      fontSize: 28,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  const Text("Sign Up",
+                      style: TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: usernameController,
+                    decoration: _inputDecoration("Username"),
                   ),
                   const SizedBox(height: 20),
                   TextField(
@@ -84,9 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: _inputDecoration("Password").copyWith(
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
+                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
                           color: Color(0xFF8B0000),
                         ),
                         onPressed: () {
@@ -97,32 +84,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
-                        );
-                      },
-                      child: const Text(
-                        "Forgot Password?",
-                        style: TextStyle(color: Colors.white70, decoration: TextDecoration.underline),
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 20),
                   Center(
                     child: ElevatedButton(
-                      onPressed: _login,
+                      onPressed: _signup,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: Color(0xFF8B0000),
                         shape: const StadiumBorder(),
                       ),
-                      child: const Text("Login"),
+                      child: const Text("Next"),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -131,32 +102,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => const SignupScreen(),
-                          ),
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
                         );
                       },
-                      child: RichText(
-                        text: const TextSpan(
-                          text: "Don’t have an account? ",
-                          style: TextStyle(color: Colors.white),
-                          children: [
-                            TextSpan(
-                              text: "Sign Up",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                          ],
-                        ),
+                      child: const Text(
+                        "Already have an account? Login",
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
-                  ),
+                  )
                 ],
               ),
-            ),
+            )
           ],
         ),
       ),
@@ -169,10 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
       filled: true,
       fillColor: const Color(0xFFFAD7A0),
       hintStyle: const TextStyle(color: Colors.black87),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(30),
-        borderSide: BorderSide.none,
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
     );
   }

@@ -9,18 +9,22 @@ class HomepageScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Recipedia Home'),
         actions: [
-          IconButton(icon: const Icon(Icons.people), onPressed: () {
-            Navigator.pushNamed(context, '/community');
-          },
-        ),
+          IconButton(
+            icon: const Icon(Icons.people),
+            onPressed: () {
+              Navigator.pushNamed(context, '/community');
+            },
+          ),
 
-          IconButton(icon: const Icon(Icons.add), onPressed: () {
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
               Navigator.pushNamed(context, '/create');
             },
           ),
         ],
       ),
-      body:const Center(
+      body: const Center(
         child: Text('Welcome to Recipedia! Explore and create more recipes.'),
       ),
     );

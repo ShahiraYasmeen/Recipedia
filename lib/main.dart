@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart'; // Make sure this exists
+import 'firebase_options.dart';
 
+import 'screens/splash_screen.dart';
 import 'screens/homepage.dart';
 import 'screens/community.dart';
 import 'screens/createrecipe.dart';
@@ -23,10 +24,10 @@ class RecipediaApp extends StatelessWidget {
     return MaterialApp(
       title: 'Recipedia_App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFFFAD7A0)),
         useMaterial3: true,
       ),
-      home: const BottomNavBarExample(),
+      home: const SplashScreen(), // Starting screen
     );
   }
 }
@@ -61,11 +62,29 @@ class _BottomNavBarExampleState extends State<BottomNavBarExample> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Community'),
-          BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Create'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        backgroundColor: const Color(0xFF8B0000),
+        selectedItemColor: const Color(0xFFFAD7A0),
+        unselectedItemColor: Colors.white,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal),
+        type: BottomNavigationBarType.fixed,
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home, size: _selectedIndex == 0 ? 30 : 24),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.group, size: _selectedIndex == 1 ? 30 : 24),
+            label: 'Community',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add, size: _selectedIndex == 2 ? 30 : 24),
+            label: 'Create',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person, size: _selectedIndex == 3 ? 30 : 24),
+            label: 'Profile',
+          ),
         ],
       ),
     );
