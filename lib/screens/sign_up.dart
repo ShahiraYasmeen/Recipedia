@@ -22,7 +22,10 @@ class _SignupScreenState extends State<SignupScreen> {
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
-      Navigator.pushReplacementNamed(context, '/home');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Signup failed: ${e.toString()}")),
@@ -39,9 +42,14 @@ class _SignupScreenState extends State<SignupScreen> {
         child: Column(
           children: [
             const Text("Welcome to", style: TextStyle(fontSize: 16)),
-            const Text("Recipedia",
-                style: TextStyle(
-                    fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF8B0000))),
+            const Text(
+              "Recipedia",
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF8B0000),
+              ),
+            ),
             const SizedBox(height: 16),
             Image.asset('assets/logo.png', width: 220),
             const SizedBox(height: 32),
@@ -54,8 +62,14 @@ class _SignupScreenState extends State<SignupScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Sign Up",
-                      style: TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "Sign Up",
+                    style: TextStyle(
+                      fontSize: 28,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 20),
                   TextField(
                     controller: usernameController,
@@ -73,7 +87,9 @@ class _SignupScreenState extends State<SignupScreen> {
                     decoration: _inputDecoration("Password").copyWith(
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                           color: Color(0xFF8B0000),
                         ),
                         onPressed: () {
@@ -93,7 +109,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         foregroundColor: Color(0xFF8B0000),
                         shape: const StadiumBorder(),
                       ),
-                      child: const Text("Next"),
+                      child: const Text("Sign Up"),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -105,9 +121,21 @@ class _SignupScreenState extends State<SignupScreen> {
                           MaterialPageRoute(builder: (_) => const LoginScreen()),
                         );
                       },
-                      child: const Text(
-                        "Already have an account? Login",
-                        style: TextStyle(color: Colors.white),
+                      child: RichText(
+                        text: const TextSpan(
+                          text: "Already have an account? ",
+                          style: TextStyle(color: Colors.white),
+                          children: [
+                            TextSpan(
+                              text: "Login",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   )
@@ -126,7 +154,10 @@ class _SignupScreenState extends State<SignupScreen> {
       filled: true,
       fillColor: const Color(0xFFFAD7A0),
       hintStyle: const TextStyle(color: Colors.black87),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(30),
+        borderSide: BorderSide.none,
+      ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
     );
   }
