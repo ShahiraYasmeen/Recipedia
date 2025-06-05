@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "559017672881",
+    "project_id": "recipedia-app-6e87c",
+    "storage_bucket": "recipedia-app-6e87c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:559017672881:android:32864a86ffdffbdd4b2290",
+        "android_client_info": {
+          "package_name": "com.example.recipedia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCPR3T-VqhcPY2K11b-ORMEJVahxWxQhqU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
