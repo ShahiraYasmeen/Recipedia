@@ -6,13 +6,11 @@ import 'screens/splash_screen.dart';
 import 'screens/homepage.dart';
 import 'screens/community.dart';
 import 'screens/createrecipe.dart';
-import 'screens/profile_setup.dart';
+import 'screens/view_profile.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const RecipediaApp());
 }
 
@@ -46,7 +44,7 @@ class _BottomNavBarExampleState extends State<BottomNavBarExample> {
     const HomepageScreen(),
     const CommunityScreen(),
     const CreateRecipeScreen(),
-    const ProfileSetupScreen(),
+    const ViewProfileScreen(),
   ];
 
   void _onItemTapped(int index) {
