@@ -41,7 +41,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                 labelText: 'Ingredients',
                 border: OutlineInputBorder(),
               ),
-              maxLines: 10,
+              maxLines: 4,
             ),
 
             const SizedBox(height: 16),
@@ -50,7 +50,7 @@ class _CreateRecipeScreenState extends State<CreateRecipeScreen> {
                 labelText: 'Steps',
                 border: OutlineInputBorder(),
               ),
-              maxLines: 10,
+              maxLines: 4,
             ),
 
             const SizedBox(height: 16),
