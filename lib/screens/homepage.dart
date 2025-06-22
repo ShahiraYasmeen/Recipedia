@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'recipe_detail_page.dart';
 
 class HomepageScreen extends StatefulWidget {
   const HomepageScreen({Key? key}) : super(key: key);
@@ -13,8 +14,8 @@ class _HomepageScreenState extends State<HomepageScreen> {
   List categoryname = ['App', 'MC', 'Dess', 'Bev', 'Sna'];
   List foodname = [
     ['Salmon Toast', 'Cheese Bites', 'Spring Rolls', 'Mini Quiche'],
-    ['Chicken Curry', 'Beef Stew', 'Seafood Pasta', 'Grilled Salmon'],
-    ['Lava Cake', 'Berry Tart', 'Cheesecake', 'Chocolate Mousse'],
+    ['Grilled Chicken', 'Chicken Curry', 'Beef Stew', 'Seafood Pasta'],
+    ['Strawberry Tart', 'Lava Cake', 'Berry Tart', 'Cheesecake'],
     ['Mojito', 'Lemonade', 'Iced Coffee', 'Smoothie'],
     ['Nachos', 'Popcorn', 'Chips', 'Nuggets'],
   ];
@@ -106,7 +107,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                                 Row(
                                 children: [
                                 Text(
-                                  'Popular Recipes',
+                                  'Recipes',
                                   style: TextStyle(
                                   fontSize: 20,
                                   color: Colors.black,
@@ -162,14 +163,28 @@ class _HomepageScreenState extends State<HomepageScreen> {
                             ),
                           ),
                           SizedBox(height: 20),
-                          Text(
-                            foodname[indexx][index],
+                          GestureDetector(
+                          onTap: () {
+                          Navigator.push(
+                            context,
+                          MaterialPageRoute(
+                            builder: (context) => RecipeDetailPage(
+                            title: foodname[indexx][index],
+                            imagePath: 'assets/${categoryname[indexx]}${index}.jpg',
+                            ),
+                          ),
+                          );
+                          },
+                          child: Text(
+                          foodname[indexx][index],
                             style: TextStyle(
                             fontSize: 18, 
                             color: Colors.black,
                             fontFamily: 'roboto',
-                            ) 
+                            decoration: TextDecoration.underline, // optional: to hint it’s clickable
                             ),
+                            ),
+                          ),
                         ],)
                     );
                   },
