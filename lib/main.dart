@@ -25,6 +25,7 @@ class RecipediaApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFFFAD7A0)),
         useMaterial3: true,
       ),
+      debugShowCheckedModeBanner: false, // Disable debug banner
       home: const SplashScreen(), // Starting screen
     );
   }
