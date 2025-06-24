@@ -62,7 +62,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                             onTap: () {
                               setState(() {
                                 indexx = index;
-                              });
+                              }); 
                             },
                         child: Container(
                           decoration: BoxDecoration(
