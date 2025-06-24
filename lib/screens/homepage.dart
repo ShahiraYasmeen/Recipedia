@@ -40,7 +40,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
               child: Text(
-                'Popular Category',
+                'Popular',
                 style: TextStyle(fontSize: 20, color: Theme.of(context).primaryColor),
               ),
             ),
