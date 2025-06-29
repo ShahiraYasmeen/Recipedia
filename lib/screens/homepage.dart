@@ -10,7 +10,7 @@ class HomepageScreen extends StatefulWidget {
 
 class _HomepageScreenState extends State<HomepageScreen> {
   int indexx = 0;
-  List category = ['Appetizer', 'Main Course', 'Dessert', 'Beverages', 'Snacks'];
+  List category = ['Favourite', 'Appetizer', 'Main Course', 'Dessert', 'Beverages', 'Snacks'];
   List categoryname = ['App', 'MC', 'Dess', 'Bev', 'Sna'];
   List foodname = [
     ['Salmon Toast', 'Cheese Bites', 'Spring Rolls', 'Mini Quiche'],
@@ -40,7 +40,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
               child: Text(
-                'Popular',
+                'Popular Category',
                 style: TextStyle(fontSize: 20, color: Theme.of(context).primaryColor),
               ),
             ),
@@ -53,7 +53,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                   SizedBox(
                     height: 50,
                     child: ListView.builder(
-                      itemCount: 5,
+                      itemCount: 6,
                       scrollDirection: Axis.horizontal,
                       itemBuilder: ((context, index) {
                         return Padding(
