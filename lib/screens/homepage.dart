@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'recipe_detail_page.dart';
 
 class HomepageScreen extends StatefulWidget {
-  const HomepageScreen({Key? key}) : super(key: key);
+  const HomepageScreen({super.key});
 
   @override
   State<HomepageScreen> createState() => _HomepageScreenState();
@@ -50,7 +50,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
             sliver: SliverToBoxAdapter(
               child: Column(
                 children: [
-                  Container(
+                  SizedBox(
                     height: 50,
                     child: ListView.builder(
                       itemCount: 5,
@@ -155,7 +155,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                             width: 129,
                             decoration: BoxDecoration(
                               image: DecorationImage(
-                                image: AssetImage('assets/${categoryname[indexx]}${index}.jpg'), 
+                                image: AssetImage('assets/${categoryname[indexx]}$index.jpg'), 
                                 fit: BoxFit.cover,
                               ),
                               borderRadius: BorderRadius.circular(20),
@@ -170,7 +170,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                           MaterialPageRoute(
                             builder: (context) => RecipeDetailPage(
                             title: foodname[indexx][index],
-                            imagePath: 'assets/${categoryname[indexx]}${index}.jpg',
+                            imagePath: 'assets/${categoryname[indexx]}$index.jpg',
                             ),
                           ),
                           );
