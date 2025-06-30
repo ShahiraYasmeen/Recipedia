@@ -43,8 +43,8 @@ class _BottomNavBarExampleState extends State<BottomNavBarExample> {
 
   final List<Widget> _pages = [
     const HomepageScreen(),
-    CommunityScreen(),
-    const CreateRecipeScreen(),
+    const CommunityScreen(),
+    RecipeCreationScreen(), // Use the correct class name as defined in createrecipe.dart
     const ViewProfileScreen(),
   ];
 
