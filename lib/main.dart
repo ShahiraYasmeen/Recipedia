@@ -43,7 +43,7 @@ class _BottomNavBarExampleState extends State<BottomNavBarExample> {
 
   final List<Widget> _pages = [
     const HomepageScreen(),
-    const CommunityScreen(),
+    CommunityScreen(),
     const CreateRecipeScreen(),
     const ViewProfileScreen(),
   ];
