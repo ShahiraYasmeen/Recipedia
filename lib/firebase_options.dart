@@ -8,7 +8,7 @@ class DefaultFirebaseOptions {
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        throw UnsupportedError('DefaultFirebaseOptions have not been configured for Android.');
+        return android;
       case TargetPlatform.iOS:
         throw UnsupportedError('DefaultFirebaseOptions have not been configured for iOS.');
       case TargetPlatform.macOS:
@@ -19,12 +19,21 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: "AIzaSyCwakGeYzKUyfdE5XHzVkarSQcyBNRGO1k",
-    authDomain: "recipedia-app-6e87c.firebaseapp.com",
-    projectId: "recipedia-app-6e87c",
-    storageBucket: "recipedia-app-6e87c.appspot.com", // ✅ Fixed: correct domain
-    messagingSenderId: "559017672881",
-    appId: "1:559017672881:web:a00b3a33f18c6d274b2290",
-    measurementId: "G-5KRJXCYVGY",
+    apiKey: 'AIzaSyCwakGeYzKUyfdE5XHzVkarSQcyBNRGO1k',
+    appId: '1:559017672881:web:a00b3a33f18c6d274b2290',
+    messagingSenderId: '559017672881',
+    projectId: 'recipedia-app-6e87c',
+    authDomain: 'recipedia-app-6e87c.firebaseapp.com',
+    storageBucket: 'recipedia-app-6e87c.firebasestorage.app',
+    measurementId: 'G-5KRJXCYVGY',
   );
+
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyCPR3T-VqhcPY2K11b-ORMEJVahxWxQhqU',
+    appId: '1:559017672881:android:32864a86ffdffbdd4b2290',
+    messagingSenderId: '559017672881',
+    projectId: 'recipedia-app-6e87c',
+    storageBucket: 'recipedia-app-6e87c.firebasestorage.app',
+  );
+
 }
