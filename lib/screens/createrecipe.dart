@@ -1,31 +1,37 @@
-import 'dart:io';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
-void main() => runApp(MaterialApp(home: RecipeCreationScreen()));
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RecipeCreationScreen extends StatefulWidget {
   const RecipeCreationScreen({super.key});
 
   @override
-  _AddRecipePageState createState() => _AddRecipePageState();
+  _RecipeCreationScreenState createState() => _RecipeCreationScreenState();
 }
 
-class _AddRecipePageState extends State<RecipeCreationScreen> {
-  bool isPrivate = false;
-  double sliderValue = 1;
-  double difficultyValue = 1;
-  String category = 'Appetizer';
-  String durationUnit = 'mins';
-  File? selectedImage;
-  final picker = ImagePicker();
+class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
+  final ImagePicker picker = ImagePicker();
+  Uint8List? _imageBytes;
 
   final recipeNameController = TextEditingController();
   final servingsController = TextEditingController();
   final durationController = TextEditingController();
 
+  bool isPrivate = false;
+  double spiciness = 1;
+  double difficulty = 1;
+  String category = 'Appetizer';
+  String durationUnit = 'mins';
+
+  final List<String> categories = ['Appetizer', 'Main Course', 'Dessert', 'Beverage', 'Snacks'];
+  final List<String> units = ['gram', 'kg', 'ml', 'oz', 'can'];
+  final List<String> durationUnits = ['sec', 'mins', 'hours'];
+
   List<Map<String, String>> ingredients = [];
-  List<String> directions = [];
+  List<String> steps = [];
 
   String amount = '';
   String unit = 'gram';
@@ -35,38 +41,12 @@ class _AddRecipePageState extends State<RecipeCreationScreen> {
   String stepInstruction = '';
   int? editingStepIndex;
 
-  final List<String> units = ['gram', 'kg', 'ml', 'oz', 'can'];
-  final List<String> categories = ['Appetizer', 'Main Course', 'Dessert', 'Beverage', 'Snacks'];
-  final List<String> durationUnits = ['sec', 'mins', 'hours'];
-
-  void _showSnackBar(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
-  void _uploadRecipe() {
-    _showSnackBar('Recipe uploaded successfully!', Colors.blue);
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => HomePage(category: category)),
-    );
-  }
-
-  void _cancelRecipe() {
-    _showSnackBar('Recipe upload cancelled.', Colors.red);
-  }
-
   void _pickImage() async {
-    final image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      final bytes = await picked.readAsBytes();
       setState(() {
-        selectedImage = File(image.path);
+        _imageBytes = bytes;
       });
     }
   }
@@ -74,10 +54,11 @@ class _AddRecipePageState extends State<RecipeCreationScreen> {
   void _addOrUpdateIngredient() {
     if (amount.isEmpty || ingredientName.isEmpty) return;
 
+    final ing = {'amount': amount, 'unit': unit, 'name': ingredientName};
     if (editingIngredientIndex == null) {
-      ingredients.add({'amount': amount, 'unit': unit, 'name': ingredientName});
+      ingredients.add(ing);
     } else {
-      ingredients[editingIngredientIndex!] = {'amount': amount, 'unit': unit, 'name': ingredientName};
+      ingredients[editingIngredientIndex!] = ing;
       editingIngredientIndex = null;
     }
 
@@ -97,26 +78,6 @@ class _AddRecipePageState extends State<RecipeCreationScreen> {
     });
   }
 
-  void _confirmDeleteIngredient(int index) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Delete Ingredient'),
-        content: Text('Are you sure you want to delete this ingredient?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel')),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _deleteIngredient(index);
-            },
-            child: Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _deleteIngredient(int index) {
     setState(() {
       ingredients.removeAt(index);
@@ -128,9 +89,9 @@ class _AddRecipePageState extends State<RecipeCreationScreen> {
     if (stepInstruction.isEmpty) return;
 
     if (editingStepIndex == null) {
-      directions.add(stepInstruction);
+      steps.add(stepInstruction);
     } else {
-      directions[editingStepIndex!] = stepInstruction;
+      steps[editingStepIndex!] = stepInstruction;
       editingStepIndex = null;
     }
 
@@ -141,101 +102,132 @@ class _AddRecipePageState extends State<RecipeCreationScreen> {
 
   void _editStep(int index) {
     setState(() {
-      stepInstruction = directions[index];
+      stepInstruction = steps[index];
       editingStepIndex = index;
     });
   }
 
-  void _confirmDeleteStep(int index) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Delete Step'),
-        content: Text('Are you sure you want to delete this step?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel')),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _deleteStep(index);
-            },
-            child: Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _deleteStep(int index) {
     setState(() {
-      directions.removeAt(index);
+      steps.removeAt(index);
       if (editingStepIndex == index) editingStepIndex = null;
     });
   }
 
+  void _showSnackBar(String msg, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: color,
+      ),
+    );
+  }
+
+  Future<void> _uploadRecipe() async {
+    if (_imageBytes == null ||
+        recipeNameController.text.isEmpty ||
+        servingsController.text.isEmpty ||
+        durationController.text.isEmpty ||
+        ingredients.isEmpty ||
+        steps.isEmpty) {
+      _showSnackBar("Please complete all fields including image!", Colors.red);
+      return;
+    }
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      _showSnackBar("User not logged in!", Colors.red);
+      return;
+    }
+
+    final base64Image = base64Encode(_imageBytes!);
+
+    final doc = {
+      'title': recipeNameController.text.trim(),
+      'category': category,
+      'servings': servingsController.text.trim(),
+      'duration': '${durationController.text.trim()} $durationUnit',
+      'ingredients': ingredients,
+      'steps': steps,
+      'spiciness': spiciness,
+      'difficulty': difficulty,
+      'image': base64Image,
+      'private': isPrivate,
+      'uid': user.uid,
+      'timestamp': FieldValue.serverTimestamp(),
+    };
+
+    try {
+      await FirebaseFirestore.instance.collection('recipes').add(doc);
+      _showSnackBar('Recipe uploaded successfully!', Colors.blue);
+      Navigator.pop(context);
+    } catch (e) {
+      _showSnackBar('Error uploading: $e', Colors.red);
+    }
+  }
+
   Widget _fieldLabel(String text) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Align(
-          alignment: Alignment.centerLeft,
-          child: Text(text, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        ),
+        child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
       );
 
-  Widget _card({required Widget child}) => Container(
-        margin: const EdgeInsets.symmetric(vertical: 6),
+  Widget _customCard(Widget child) => Container(
         padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.symmetric(vertical: 6),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6)],
+          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
         ),
         child: child,
       );
 
+  void _cancelRecipe() {
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFFFF6F0),
+      backgroundColor: const Color(0xFFFFF6F0),
       appBar: AppBar(
-        backgroundColor: Color(0xFF8B0000),
-        title: Text('Create New Recipe', style: TextStyle(fontFamily: 'Poppins')),
+        backgroundColor: const Color(0xFF8B0000),
+        title: const Text('Create New Recipe'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              height: 180,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.white,
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6)],
-              ),
-              child: selectedImage == null
-                  ? Center(child: Text('No image selected'))
-                  : ClipRRect(
+            _imageBytes != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.memory(_imageBytes!, height: 180, fit: BoxFit.cover, width: double.infinity),
+                  )
+                : Container(
+                    height: 180,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
                       borderRadius: BorderRadius.circular(12),
-                      child: Image.file(selectedImage!, fit: BoxFit.cover, width: double.infinity),
                     ),
-            ),
-            SizedBox(height: 8),
+                    child: const Center(child: Text('No image selected')),
+                  ),
+            const SizedBox(height: 8),
             ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFFFE0B2),
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
               onPressed: _pickImage,
-              icon: Icon(Icons.upload),
-              label: Text('Upload Image'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFFE0B2),
+                foregroundColor: Colors.black,
+              ),
+              icon: const Icon(Icons.upload),
+              label: const Text('Upload Image'),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             _fieldLabel('Recipe Name'),
-            _card(child: TextField(controller: recipeNameController, decoration: InputDecoration.collapsed(hintText: 'Enter name'))),
+            _customCard(TextField(controller: recipeNameController, decoration: const InputDecoration.collapsed(hintText: 'Enter recipe name'))),
             _fieldLabel('Category'),
-            _card(
-              child: DropdownButton<String>(
+            _customCard(
+              DropdownButton<String>(
                 isExpanded: true,
                 value: category,
                 onChanged: (val) => setState(() => category = val!),
@@ -243,13 +235,13 @@ class _AddRecipePageState extends State<RecipeCreationScreen> {
               ),
             ),
             _fieldLabel('Servings'),
-            _card(child: TextField(controller: servingsController, decoration: InputDecoration.collapsed(hintText: 'e.g. 4'))),
+            _customCard(TextField(controller: servingsController, decoration: const InputDecoration.collapsed(hintText: 'e.g. 4'))),
             _fieldLabel('Cook Duration'),
-            _card(
-              child: Row(
+            _customCard(
+              Row(
                 children: [
-                  Expanded(child: TextField(controller: durationController, keyboardType: TextInputType.number, decoration: InputDecoration.collapsed(hintText: 'e.g. 30'))),
-                  SizedBox(width: 8),
+                  Expanded(child: TextField(controller: durationController, keyboardType: TextInputType.number, decoration: const InputDecoration.collapsed(hintText: 'e.g. 30'))),
+                  const SizedBox(width: 8),
                   DropdownButton<String>(
                     value: durationUnit,
                     onChanged: (val) => setState(() => durationUnit = val!),
@@ -258,22 +250,19 @@ class _AddRecipePageState extends State<RecipeCreationScreen> {
                 ],
               ),
             ),
-            _fieldLabel('Private'),
-            Switch(value: isPrivate, onChanged: (val) => setState(() => isPrivate = val)),
-            SizedBox(height: 20),
             _fieldLabel('Ingredients'),
-            _card(
-              child: Row(
+            _customCard(
+              Row(
                 children: [
-                  Expanded(child: TextField(onChanged: (val) => amount = val, controller: TextEditingController(text: amount), decoration: InputDecoration(hintText: 'Amount'))),
-                  SizedBox(width: 8),
+                  Expanded(child: TextField(onChanged: (val) => amount = val, controller: TextEditingController(text: amount), decoration: const InputDecoration(hintText: 'Amount'))),
+                  const SizedBox(width: 8),
                   DropdownButton<String>(
                     value: unit,
                     onChanged: (val) => setState(() => unit = val!),
                     items: units.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
                   ),
-                  SizedBox(width: 8),
-                  Expanded(child: TextField(onChanged: (val) => ingredientName = val, controller: TextEditingController(text: ingredientName), decoration: InputDecoration(hintText: 'Ingredient'))),
+                  const SizedBox(width: 8),
+                  Expanded(child: TextField(onChanged: (val) => ingredientName = val, controller: TextEditingController(text: ingredientName), decoration: const InputDecoration(hintText: 'Ingredient'))),
                   IconButton(icon: Icon(editingIngredientIndex == null ? Icons.add : Icons.check, color: Colors.green), onPressed: _addOrUpdateIngredient),
                 ],
               ),
@@ -281,104 +270,62 @@ class _AddRecipePageState extends State<RecipeCreationScreen> {
             ...ingredients.asMap().entries.map((entry) {
               final i = entry.key;
               final ing = entry.value;
-              return _card(
-                child: Row(
+              return _customCard(
+                Row(
                   children: [
                     Expanded(child: Text('- ${ing['amount']} ${ing['unit']} ${ing['name']}')),
-                    IconButton(onPressed: () => _editIngredient(i), icon: Icon(Icons.edit, color: Colors.orange)),
-                    IconButton(onPressed: () => _confirmDeleteIngredient(i), icon: Icon(Icons.delete, color: Colors.red)),
+                    IconButton(icon: const Icon(Icons.edit, color: Colors.orange), onPressed: () => _editIngredient(i)),
+                    IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () => _deleteIngredient(i)),
                   ],
                 ),
               );
             }),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             _fieldLabel('Steps'),
-            _card(
-              child: Row(
+            _customCard(
+              Row(
                 children: [
-                  Expanded(child: TextField(onChanged: (val) => stepInstruction = val, controller: TextEditingController(text: stepInstruction), decoration: InputDecoration(hintText: 'Enter step'))),
+                  Expanded(child: TextField(onChanged: (val) => stepInstruction = val, controller: TextEditingController(text: stepInstruction), decoration: const InputDecoration(hintText: 'Enter step'))),
                   IconButton(icon: Icon(editingStepIndex == null ? Icons.add : Icons.check, color: Colors.orange), onPressed: _addOrUpdateStep),
                 ],
               ),
             ),
-            ...directions.asMap().entries.map((entry) {
+            ...steps.asMap().entries.map((entry) {
               final i = entry.key;
               final step = entry.value;
-              return _card(
-                child: Row(
+              return _customCard(
+                Row(
                   children: [
                     Expanded(child: Text('${i + 1}. $step')),
-                    IconButton(onPressed: () => _editStep(i), icon: Icon(Icons.edit, color: Colors.orange)),
-                    IconButton(onPressed: () => _confirmDeleteStep(i), icon: Icon(Icons.delete, color: Colors.red)),
+                    IconButton(icon: const Icon(Icons.edit, color: Colors.orange), onPressed: () => _editStep(i)),
+                    IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () => _deleteStep(i)),
                   ],
                 ),
               );
             }),
-            SizedBox(height: 20),
             _fieldLabel('Spiciness'),
-            _card(
-              child: Slider(
-                value: sliderValue,
-                onChanged: (val) => setState(() => sliderValue = val),
-                min: 1,
-                max: 5,
-                divisions: 4,
-                label: sliderValue.round().toString(),
-              ),
-            ),
+            _customCard(Slider(value: spiciness, min: 1, max: 5, divisions: 4, label: spiciness.round().toString(), onChanged: (v) => setState(() => spiciness = v))),
             _fieldLabel('Difficulty'),
-            _card(
-              child: Slider(
-                value: difficultyValue,
-                onChanged: (val) => setState(() => difficultyValue = val),
-                min: 1,
-                max: 5,
-                divisions: 4,
-                label: difficultyValue.round().toString(),
-              ),
+            _customCard(Slider(value: difficulty, min: 1, max: 5, divisions: 4, label: difficulty.round().toString(), onChanged: (v) => setState(() => difficulty = v))),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Switch(value: isPrivate, onChanged: (v) => setState(() => isPrivate = v)),
+                Text("Private? Only show on Homepage", style: TextStyle(fontWeight: FontWeight.w500)),
+              ],
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                ElevatedButton(
-                  onPressed: _uploadRecipe,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  ),
-                  child: Text('Upload'),
-                ),
-                SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _cancelRecipe,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  ),
-                  child: Text('Cancel'),
-                ),
+                ElevatedButton(onPressed: _uploadRecipe, child: const Text('Upload')),
+                const SizedBox(width: 10),
+                ElevatedButton(onPressed: _cancelRecipe, style: ElevatedButton.styleFrom(backgroundColor: Colors.red), child: const Text('Cancel')),
               ],
             ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  final String category;
-
-  const HomePage({super.key, required this.category});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('$category Recipes')),
-      body: Center(child: Text('Display $category recipes here...')),
     );
   }
 }
