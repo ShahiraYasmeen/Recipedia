@@ -177,7 +177,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                             width: 129,
                             decoration: BoxDecoration(
                               image: DecorationImage(
-                                image: AssetImage('assets/${categoryname[indexx]}${index}.jpg'), 
+                                image: AssetImage('assets/${categoryname[indexx]}$index.jpg'), 
                                 fit: BoxFit.cover,
                               ),
                               borderRadius: BorderRadius.circular(20),
@@ -192,7 +192,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                           MaterialPageRoute(
                             builder: (context) => RecipeDetailPage(
                             title: foodname[indexx][index],
-                            imagePath: 'assets/${categoryname[indexx]}${index}.jpg',
+                            imagePath: 'assets/${categoryname[indexx]}$index.jpg',
                             ),
                           ),
                           );
