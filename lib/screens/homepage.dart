@@ -177,8 +177,8 @@ class _HomepageScreenState extends State<HomepageScreen> {
                             width: 129,
                             decoration: BoxDecoration(
                               image: DecorationImage(
-                              image: AssetImage('assets/${categoryname[indexx]}$index.jpg'),
-                              fit: BoxFit.cover,
+                                image: AssetImage(imagePath), 
+                                fit: BoxFit.cover,
                               ),
                               borderRadius: BorderRadius.circular(20),
                             ),
@@ -187,15 +187,15 @@ class _HomepageScreenState extends State<HomepageScreen> {
                         const SizedBox(height: 20),
                         GestureDetector(
                           onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => RecipeDetailPage(
-                                  title: title,
-                                  imagePath: imagePath,
-                                ),
-                              ),
-                            );
+                          Navigator.push(
+                            context,
+                          MaterialPageRoute(
+                            builder: (context) => RecipeDetailPage(
+                            title: foodname[indexx][index],
+                            imagePath: 'assets/${categoryname[indexx]}${index}.jpg',
+                            ),
+                          ),
+                          );
                           },
                           child: Text(
                           title,
