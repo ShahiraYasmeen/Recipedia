@@ -192,8 +192,8 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       ),
                       child: const Icon(
                         Icons.arrow_forward_ios, 
-                        size: 16, 
-                        color: Color(0xFF8B0000),),
+                        size: 16,
+                        color: Color(0xFF8B0000)),
                     ),
                   ),
                 ),
@@ -287,7 +287,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                                 style: const TextStyle(
                                   fontSize: 18,
                                   color: Colors.black,
-                                  
+                                  decoration: TextDecoration.underline,
                                 ),
                               ),
                             ),
