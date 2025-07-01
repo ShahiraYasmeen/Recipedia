@@ -177,7 +177,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                             width: 129,
                             decoration: BoxDecoration(
                               image: DecorationImage(
-                                image: AssetImage('assets/${categoryname[indexx]}${index}.jpg'), 
+                                image: AssetImage(imagePath), 
                                 fit: BoxFit.cover,
                               ),
                               borderRadius: BorderRadius.circular(20),
