@@ -10,198 +10,241 @@ class CommunityScreen extends StatefulWidget {
 
 class _CommunityScreenState extends State<CommunityScreen> {
   int selectedCategoryIndex = 0;
+  final ScrollController _scrollController = ScrollController();
+  bool _showScrollHint = true;
 
-  final List<String> categories = ['Appetizer', 'Main Course', 'Dessert', 'Beverages', 'Snacks'];
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _showScrollHint = false;
+        });
+      }
+    });
+  }
+
+  final List<String> categories = [
+    'All',
+    'Appetizer',
+    'Main Course',
+    'Dessert',
+    'Beverages',
+    'Snacks'
+  ];
 
   final List<List<Map<String, dynamic>>> recipeData = [
-    [ // Appetizer
-      {'title': 'Salmon Toast', 'duration': '30 mins', 'difficulty': 'Easy', 'servings': '8', 'image': 'assets/App0.jpg', 'author': 'Amy Wong'},
-      {'title': 'Cheese Bites', 'duration': '25 mins', 'difficulty': 'Easy', 'servings': '8', 'image': 'assets/App1.jpg', 'author': 'John Smith'},
-      {'title': 'Spring Rolls', 'duration': '40 mins', 'difficulty': 'Medium', 'servings': '6', 'image': 'assets/App2.jpg', 'author': 'Lisa Chen'},
-      {'title': 'Mini Quiche', 'duration': '35 mins', 'difficulty': 'Medium', 'servings': '6', 'image': 'assets/App3.jpg', 'author': 'Kevin Tan'},
+    [ // Appetizer (cat 0)
+      {'title': 'Salmon Toast', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/App0.jpg', 'author': 'Amy Wong', 'likes': 2, 'cat': 0, 'index': 0},
+      {'title': 'Cheese Bites', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/App1.jpg', 'author': 'John Smith', 'likes': 3, 'cat': 0, 'index': 1},
+      {'title': 'Spring Rolls', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/App2.jpg', 'author': 'Lisa Chen', 'likes': 4, 'cat': 0, 'index': 2},
+      {'title': 'Mini Quiche', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/App3.jpg', 'author': 'Karen Lee', 'likes': 5, 'cat': 0, 'index': 3},
     ],
-    [ // Main Course
-      {'title': 'Grilled Chicken', 'duration': '50 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/MC0.jpg', 'author': 'Emma Lee'},
-      {'title': 'Chicken Curry', 'duration': '45 mins', 'difficulty': 'Medium', 'servings': '5', 'image': 'assets/MC1.jpg', 'author': 'Raj Kumar'},
-      {'title': 'Beef Stew', 'duration': '60 mins', 'difficulty': 'Hard', 'servings': '6', 'image': 'assets/MC2.jpg', 'author': 'Ahmad Zaki'},
-      {'title': 'Seafood Pasta', 'duration': '40 mins', 'difficulty': 'Medium', 'servings': '4', 'image': 'assets/MC3.jpg', 'author': 'Nina Wong'},
+    [ // Main Course (cat 1)
+      {'title': 'Grilled Chicken', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/MC0.jpg', 'author': 'Emma Lee', 'likes': 2, 'cat': 1, 'index': 0},
+      {'title': 'Chicken Curry', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/MC1.jpg', 'author': 'Raj Kumar', 'likes': 3, 'cat': 1, 'index': 1},
+      {'title': 'Beef Stew', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/MC2.jpg', 'author': 'Ahmad Zaki', 'likes': 4, 'cat': 1, 'index': 2},
+      {'title': 'Seafood Pasta', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/MC3.jpg', 'author': 'Nina Wong', 'likes': 5, 'cat': 1, 'index': 3},
     ],
-    [ // Dessert
-      {'title': 'Strawberry Tart', 'duration': '30 mins', 'difficulty': 'Easy', 'servings': '6', 'image': 'assets/Dess0.jpg', 'author': 'Lina'},
-      {'title': 'Lava Cake', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '4', 'image': 'assets/Dess1.jpg', 'author': 'Ravi'},
-      {'title': 'Berry Tart', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/Dess2.jpg', 'author': 'Cindy'},
-      {'title': 'Cheesecake', 'duration': '45 mins', 'difficulty': 'Medium', 'servings': '6', 'image': 'assets/Dess3.jpg', 'author': 'James'},
+    [ // Dessert (cat 2)
+      {'title': 'Strawberry Tart', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/Dess0.jpg', 'author': 'Lina', 'likes': 2, 'cat': 2, 'index': 0},
+      {'title': 'Lava Cake', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/Dess1.jpg', 'author': 'Farah Lim', 'likes': 3, 'cat': 2, 'index': 1},
+      {'title': 'Ice Cream Sandwich', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/Dess2.jpg', 'author': 'Ken Wong', 'likes': 4, 'cat': 2, 'index': 2},
+      {'title': 'Pudding Cup', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/Dess3.jpg', 'author': 'Chloe Tan', 'likes': 5, 'cat': 2, 'index': 3},
     ],
-    [ // Beverages
-      {'title': 'Mojito', 'duration': '10 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/Bev0.jpg', 'author': 'Ali'},
-      {'title': 'Lemonade', 'duration': '8 mins', 'difficulty': 'Easy', 'servings': '3', 'image': 'assets/Bev1.jpg', 'author': 'Aisha'},
-      {'title': 'Iced Coffee', 'duration': '5 mins', 'difficulty': 'Easy', 'servings': '1', 'image': 'assets/Bev2.jpg', 'author': 'Ben'},
-      {'title': 'Smoothie', 'duration': '7 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/Bev3.jpg', 'author': 'Maya'},
+    [ // Beverages (cat 3)
+      {'title': 'Fruit Smoothie', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/Bev0.jpg', 'author': 'Izzah Rahim', 'likes': 2, 'cat': 3, 'index': 0},
+      {'title': 'Iced Latte', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/Bev1.jpg', 'author': 'Jason Ong', 'likes': 3, 'cat': 3, 'index': 1},
+      {'title': 'Matcha Tea', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/Bev2.jpg', 'author': 'Tina Hee', 'likes': 4, 'cat': 3, 'index': 2},
+      {'title': 'Lemonade', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/Bev3.jpg', 'author': 'Ain Adam', 'likes': 5, 'cat': 3, 'index': 3},
     ],
-    [ // Snacks
-      {'title': 'Nachos', 'duration': '15 mins', 'difficulty': 'Easy', 'servings': '4', 'image': 'assets/Sna0.jpg', 'author': 'Jake'},
-      {'title': 'Popcorn', 'duration': '5 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/Sna1.jpg', 'author': 'Sam'},
-      {'title': 'Chips', 'duration': '10 mins', 'difficulty': 'Easy', 'servings': '3', 'image': 'assets/Sna2.jpg', 'author': 'Kim'},
-      {'title': 'Nuggets', 'duration': '12 mins', 'difficulty': 'Easy', 'servings': '4', 'image': 'assets/Sna3.jpg', 'author': 'Chris'},
+    [ // Snacks (cat 4)
+      {'title': 'Nachos', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/Sna0.jpg', 'author': 'Sarah Chia', 'likes': 2, 'cat': 4, 'index': 0},
+      {'title': 'Popcorn Mix', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/Sna1.jpg', 'author': 'Adam Lim', 'likes': 3, 'cat': 4, 'index': 1},
+      {'title': 'Potato Wedges', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/Sna2.jpg', 'author': 'Lim Wei', 'likes': 4, 'cat': 4, 'index': 2},
+      {'title': 'Granola Bars', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/Sna3.jpg', 'author': 'Joanne Lee', 'likes': 5, 'cat': 4, 'index': 3},
     ],
   ];
 
-  final Set<String> savedRecipes = {};
+  final Set<String> likedRecipes = {};
+
+  List<Map<String, dynamic>> getFilteredRecipes() {
+    if (selectedCategoryIndex == 0) {
+      return recipeData.expand((list) => list).toList(); // All
+    } else {
+      return recipeData[selectedCategoryIndex - 1];
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final currentRecipes = recipeData[selectedCategoryIndex];
+    final recipes = getFilteredRecipes();
 
     return Scaffold(
+      backgroundColor: const Color(0xFFFFF8F5),
       appBar: AppBar(
-        title: const Text(
-          'Recipedia',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white, // ✅ updated text color
-          ),
-        ),
+        title: const Text('Recipedia', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: const Color(0xFF8B0000),
         centerTitle: true,
-        elevation: 0,
       ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Category Filter
+          // Horizontal Category Pills with arrow hint
           Container(
-            height: 50,
-            margin: const EdgeInsets.only(top: 10, left: 15),
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                bool isSelected = selectedCategoryIndex == index;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() => selectedCategoryIndex = index);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 10),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color: isSelected ? const Color(0xFF8B0000) : Colors.transparent,
-                        boxShadow: isSelected
-                            ? [const BoxShadow(color: Color(0xFF8B0000), blurRadius: 7, offset: Offset(1, 1))]
-                            : [],
-                      ),
-                      child: Text(
-                        categories[index],
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: isSelected ? Colors.white : Colors.black,
-                          fontFamily: 'roboto',
+            padding: const EdgeInsets.only(left: 12, top: 16, bottom: 16),
+            child: Stack(
+              children: [
+                SingleChildScrollView(
+                  controller: _scrollController,
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: List.generate(categories.length, (index) {
+                      final isSelected = selectedCategoryIndex == index;
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedCategoryIndex = index;
+                          });
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected ? const Color(0xFF8B0000) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.3),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    )
+                                  ]
+                                : [],
+                          ),
+                          child: Text(
+                            categories[index],
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: isSelected ? Colors.white : Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
+                      );
+                    }),
+                  ),
+                ),
+                if (_showScrollHint)
+                  Positioned(
+                    right: 0,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.transparent, const Color(0xFFFFF8F5)],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                      ),
+                      child: const Padding(
+                        padding: EdgeInsets.only(right: 8.0),
+                        child: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
                       ),
                     ),
                   ),
-                );
-              },
+              ],
             ),
           ),
 
-          // Recipes Title
-          Container(
-            alignment: Alignment.centerLeft,
-            margin: const EdgeInsets.only(left: 15, top: 15),
-            child: const Text('Recipes',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'roboto')),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4),
+            child: Text("Recipes", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ),
 
-          // Recipe List
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.all(15),
-              itemCount: currentRecipes.length,
+              itemCount: recipes.length,
               itemBuilder: (context, index) {
-                final recipe = currentRecipes[index];
-                final isSaved = savedRecipes.contains(recipe['title']);
+                final recipe = recipes[index];
+                final recipeKey = recipe['title'];
+                recipe['likes'] ??= 0;
+                final isLiked = likedRecipes.contains(recipeKey);
 
                 return GestureDetector(
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => CommunityRecipeDetailPage(recipe: recipe),
-                      ),
+                      MaterialPageRoute(builder: (context) => CommunityRecipeDetailPage(recipe: recipe)),
                     );
                   },
                   child: Container(
-                    margin: const EdgeInsets.only(bottom: 20),
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: const [BoxShadow(color: Colors.grey, blurRadius: 15, offset: Offset(1, 1))],
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.2),
+                          spreadRadius: 2,
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [
-                        // Image
                         ClipRRect(
-                          borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(20), bottomLeft: Radius.circular(20)),
-                          child: Image.asset(
-                            recipe['image'],
-                            height: 140,
-                            width: 130,
-                            fit: BoxFit.cover,
-                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.asset(recipe['image'], width: 100, height: 100, fit: BoxFit.cover),
                         ),
-                        // Details
+                        const SizedBox(width: 12),
                         Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Stack(
-                              children: [
-                                Align(
-                                  alignment: Alignment.topRight,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        isSaved
-                                            ? savedRecipes.remove(recipe['title'])
-                                            : savedRecipes.add(recipe['title']);
-                                      });
-                                    },
-                                    child: Icon(
-                                      isSaved ? Icons.bookmark : Icons.bookmark_border,
-                                      color: const Color(0xFF8B0000),
-                                    ),
-                                  ),
-                                ),
-                                Center(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(recipe['title'],
-                                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                                      const SizedBox(height: 5),
-                                      Text(recipe['author'], style: const TextStyle(color: Colors.grey)),
-                                      const SizedBox(height: 10),
-                                      Text(
-                                        '${recipe['duration']} • ${recipe['difficulty']} • ${recipe['servings']} servings',
-                                        style: const TextStyle(fontSize: 13),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(recipe['title'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 4),
+                              Text(recipe['author'], style: const TextStyle(color: Colors.grey)),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${recipe['duration']} • ${recipe['difficulty']} • ${recipe['servings']} servings',
+                                style: const TextStyle(fontSize: 12, color: Colors.black54),
+                              ),
+                            ],
                           ),
                         ),
+                        Column(
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                isLiked ? Icons.favorite : Icons.favorite_border,
+                                color: isLiked ? Colors.red : Colors.grey,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  if (isLiked) {
+                                    likedRecipes.remove(recipeKey);
+                                    recipe['likes'] = (recipe['likes'] ?? 1) - 1;
+                                  } else {
+                                    likedRecipes.add(recipeKey);
+                                    recipe['likes'] = (recipe['likes'] ?? 0) + 1;
+                                  }
+                                });
+                              },
+                            ),
+                            Text('${recipe['likes']}', style: const TextStyle(fontSize: 12)),
+                          ],
+                        )
                       ],
                     ),
                   ),
                 );
               },
             ),
-          )
+          ),
         ],
       ),
     );
