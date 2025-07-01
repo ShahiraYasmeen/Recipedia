@@ -35,35 +35,35 @@ class _CommunityScreenState extends State<CommunityScreen> {
   ];
 
   final List<List<Map<String, dynamic>>> recipeData = [
-    [ // Appetizer
-      {'title': 'Salmon Toast', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/App0.jpg', 'author': 'Amy Wong', 'likes': 2},
-      {'title': 'Cheese Bites', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/App1.jpg', 'author': 'John Smith', 'likes': 3},
-      {'title': 'Spring Rolls', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/App2.jpg', 'author': 'Lisa Chen', 'likes': 4},
-      {'title': 'Mini Quiche', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/App3.jpg', 'author': 'Karen Lee', 'likes': 5},
+    [ // Appetizer (cat 0)
+      {'title': 'Salmon Toast', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/App0.jpg', 'author': 'Amy Wong', 'likes': 2, 'cat': 0, 'index': 0},
+      {'title': 'Cheese Bites', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/App1.jpg', 'author': 'John Smith', 'likes': 3, 'cat': 0, 'index': 1},
+      {'title': 'Spring Rolls', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/App2.jpg', 'author': 'Lisa Chen', 'likes': 4, 'cat': 0, 'index': 2},
+      {'title': 'Mini Quiche', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/App3.jpg', 'author': 'Karen Lee', 'likes': 5, 'cat': 0, 'index': 3},
     ],
-    [ // Main Course
-      {'title': 'Grilled Chicken', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/MC0.jpg', 'author': 'Emma Lee', 'likes': 2},
-      {'title': 'Chicken Curry', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/MC1.jpg', 'author': 'Raj Kumar', 'likes': 3},
-      {'title': 'Beef Stew', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/MC2.jpg', 'author': 'Ahmad Zaki', 'likes': 4},
-      {'title': 'Seafood Pasta', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/MC3.jpg', 'author': 'Nina Wong', 'likes': 5},
+    [ // Main Course (cat 1)
+      {'title': 'Grilled Chicken', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/MC0.jpg', 'author': 'Emma Lee', 'likes': 2, 'cat': 1, 'index': 0},
+      {'title': 'Chicken Curry', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/MC1.jpg', 'author': 'Raj Kumar', 'likes': 3, 'cat': 1, 'index': 1},
+      {'title': 'Beef Stew', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/MC2.jpg', 'author': 'Ahmad Zaki', 'likes': 4, 'cat': 1, 'index': 2},
+      {'title': 'Seafood Pasta', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/MC3.jpg', 'author': 'Nina Wong', 'likes': 5, 'cat': 1, 'index': 3},
     ],
-    [ // Dessert
-      {'title': 'Strawberry Tart', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/Dess0.jpg', 'author': 'Lina', 'likes': 2},
-      {'title': 'Lava Cake', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/Dess1.jpg', 'author': 'Farah Lim', 'likes': 3},
-      {'title': 'Ice Cream Sandwich', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/Dess2.jpg', 'author': 'Ken Wong', 'likes': 4},
-      {'title': 'Pudding Cup', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/Dess3.jpg', 'author': 'Chloe Tan', 'likes': 5},
+    [ // Dessert (cat 2)
+      {'title': 'Strawberry Tart', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/Dess0.jpg', 'author': 'Lina', 'likes': 2, 'cat': 2, 'index': 0},
+      {'title': 'Lava Cake', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/Dess1.jpg', 'author': 'Farah Lim', 'likes': 3, 'cat': 2, 'index': 1},
+      {'title': 'Ice Cream Sandwich', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/Dess2.jpg', 'author': 'Ken Wong', 'likes': 4, 'cat': 2, 'index': 2},
+      {'title': 'Pudding Cup', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/Dess3.jpg', 'author': 'Chloe Tan', 'likes': 5, 'cat': 2, 'index': 3},
     ],
-    [ // Beverages
-      {'title': 'Fruit Smoothie', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/Bev0.jpg', 'author': 'Izzah Rahim', 'likes': 2},
-      {'title': 'Iced Latte', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/Bev1.jpg', 'author': 'Jason Ong', 'likes': 3},
-      {'title': 'Matcha Tea', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/Bev2.jpg', 'author': 'Tina Hee', 'likes': 4},
-      {'title': 'Lemonade', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/Bev3.jpg', 'author': 'Ain Adam', 'likes': 5},
+    [ // Beverages (cat 3)
+      {'title': 'Fruit Smoothie', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/Bev0.jpg', 'author': 'Izzah Rahim', 'likes': 2, 'cat': 3, 'index': 0},
+      {'title': 'Iced Latte', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/Bev1.jpg', 'author': 'Jason Ong', 'likes': 3, 'cat': 3, 'index': 1},
+      {'title': 'Matcha Tea', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/Bev2.jpg', 'author': 'Tina Hee', 'likes': 4, 'cat': 3, 'index': 2},
+      {'title': 'Lemonade', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/Bev3.jpg', 'author': 'Ain Adam', 'likes': 5, 'cat': 3, 'index': 3},
     ],
-    [ // Snacks
-      {'title': 'Nachos', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/Sna0.jpg', 'author': 'Sarah Chia', 'likes': 2},
-      {'title': 'Popcorn Mix', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/Sna1.jpg', 'author': 'Adam Lim', 'likes': 3},
-      {'title': 'Potato Wedges', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/Sna2.jpg', 'author': 'Lim Wei', 'likes': 4},
-      {'title': 'Granola Bars', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/Sna3.jpg', 'author': 'Joanne Lee', 'likes': 5},
+    [ // Snacks (cat 4)
+      {'title': 'Nachos', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/Sna0.jpg', 'author': 'Sarah Chia', 'likes': 2, 'cat': 4, 'index': 0},
+      {'title': 'Popcorn Mix', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/Sna1.jpg', 'author': 'Adam Lim', 'likes': 3, 'cat': 4, 'index': 1},
+      {'title': 'Potato Wedges', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/Sna2.jpg', 'author': 'Lim Wei', 'likes': 4, 'cat': 4, 'index': 2},
+      {'title': 'Granola Bars', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/Sna3.jpg', 'author': 'Joanne Lee', 'likes': 5, 'cat': 4, 'index': 3},
     ],
   ];
 
@@ -84,13 +84,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8F5),
       appBar: AppBar(
-        title: const Text(
-          'Recipedia',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
+        title: const Text('Recipedia', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: const Color(0xFF8B0000),
         centerTitle: true,
       ),
@@ -135,7 +129,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                             style: TextStyle(
                               fontSize: 16,
                               color: isSelected ? Colors.white : Colors.black,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
