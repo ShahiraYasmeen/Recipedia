@@ -36,12 +36,15 @@ class _HomepageScreenState extends State<HomepageScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _showRightArrow = true;
 
+  List<Map<String, dynamic>> firebaseRecipes = [];
+
   @override
   void initState() {
     super.initState();
     final user = FirebaseAuth.instance.currentUser;
     uid = user?.uid ?? '';
     _loadSaved();
+    _loadFirebaseRecipes();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollController.animateTo(
@@ -82,9 +85,30 @@ class _HomepageScreenState extends State<HomepageScreen> {
     }
   }
 
+  Future<void> _loadFirebaseRecipes() async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('recipes')
+        .where('isPrivate', isEqualTo: true)
+        .get();
+
+    setState(() {
+      firebaseRecipes = snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          'title': data['title'] ?? '',
+          'imageUrl': data['imageUrl'] ?? '',
+          'cat': data['category'] ?? '',
+          'index': data['index'] ?? 0,
+        };
+      }).toList();
+    });
+  }
+
   List<Map<String, dynamic>> _getFilteredRecipes() {
     List<Map<String, dynamic>> result = [];
 
+    // Static assets
     for (int cat = 0; cat < foodNames.length; cat++) {
       for (int i = 0; i < foodNames[cat].length; i++) {
         final id = '$cat-$i';
@@ -98,6 +122,15 @@ class _HomepageScreenState extends State<HomepageScreen> {
         } else if (selectedCategory == 'All' || selectedCategory == categories[cat + 2]) {
           result.add(item);
         }
+      }
+    }
+
+    // Firebase Cloudinary recipes
+    for (final recipe in firebaseRecipes) {
+      if (selectedCategory == 'All' || selectedCategory == 'Saved') {
+        result.add(recipe);
+      } else if (recipe['cat'] == selectedCategory) {
+        result.add(recipe);
       }
     }
 
@@ -164,7 +197,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                           ),
                           child: Center(
                             child: Text(
-                              cat == 'Saved' ? 'Saved' : cat,
+                              cat,
                               style: TextStyle(
                                 fontSize: 16,
                                 color: isSelected ? Colors.white : Colors.black,
@@ -190,10 +223,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                         color: Colors.white70,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
-                        Icons.arrow_forward_ios, 
-                        size: 16,
-                        color: Color(0xFF8B0000)),
+                      child: const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFF8B0000)),
                     ),
                   ),
                 ),
@@ -223,6 +253,10 @@ class _HomepageScreenState extends State<HomepageScreen> {
                     itemBuilder: (context, i) {
                       final r = recipes[i];
                       final isSaved = savedRecipes.contains(r['id']);
+
+                      final imageWidget = r['imageUrl'] != null && r['imageUrl'] != ''
+                          ? Image.network(r['imageUrl'], fit: BoxFit.cover)
+                          : Image.asset(r['image'] ?? 'assets/placeholder.jpg', fit: BoxFit.cover);
 
                       return Container(
                         decoration: BoxDecoration(
@@ -263,7 +297,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(20),
                                   image: DecorationImage(
-                                    image: AssetImage(r['image']),
+                                    image: imageWidget.image,
                                     fit: BoxFit.cover,
                                   ),
                                 ),
@@ -277,18 +311,14 @@ class _HomepageScreenState extends State<HomepageScreen> {
                                   MaterialPageRoute(
                                     builder: (_) => RecipeDetailPage(
                                       title: r['title'],
-                                      imagePath: r['image'],
+                                      imagePath: r['imageUrl'] ?? r['image'] ?? '',
                                     ),
                                   ),
                                 );
                               },
                               child: Text(
-                                r['title'],
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.black,
-                                  
-                                ),
+                                r['title'] ?? '',
+                                style: const TextStyle(fontSize: 18, color: Colors.black),
                               ),
                             ),
                           ],

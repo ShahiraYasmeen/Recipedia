@@ -2,19 +2,22 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
+import 'homepage.dart';
 
 class RecipeCreationScreen extends StatefulWidget {
   const RecipeCreationScreen({super.key});
 
   @override
-  _RecipeCreationScreenState createState() => _RecipeCreationScreenState();
+  State<RecipeCreationScreen> createState() => _RecipeCreationScreenState();
 }
 
 class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
   final ImagePicker picker = ImagePicker();
   Uint8List? _imageBytes;
+  XFile? _pickedImage;
 
   final recipeNameController = TextEditingController();
   final servingsController = TextEditingController();
@@ -26,7 +29,13 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
   String category = 'Appetizer';
   String durationUnit = 'mins';
 
-  final List<String> categories = ['Appetizer', 'Main Course', 'Dessert', 'Beverage', 'Snacks'];
+  final List<String> categories = [
+    'Appetizer',
+    'Main Course',
+    'Dessert',
+    'Beverage',
+    'Snacks',
+  ];
   final List<String> units = ['gram', 'kg', 'ml', 'oz', 'can'];
   final List<String> durationUnits = ['sec', 'mins', 'hours'];
 
@@ -41,12 +50,13 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
   String stepInstruction = '';
   int? editingStepIndex;
 
-  void _pickImage() async {
+  Future<void> _pickImage() async {
     final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
       final bytes = await picked.readAsBytes();
       setState(() {
         _imageBytes = bytes;
+        _pickedImage = picked;
       });
     }
   }
@@ -65,16 +75,6 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
     setState(() {
       amount = '';
       ingredientName = '';
-    });
-  }
-
-  void _editIngredient(int index) {
-    final ing = ingredients[index];
-    setState(() {
-      amount = ing['amount']!;
-      unit = ing['unit']!;
-      ingredientName = ing['name']!;
-      editingIngredientIndex = index;
     });
   }
 
@@ -100,13 +100,6 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
     });
   }
 
-  void _editStep(int index) {
-    setState(() {
-      stepInstruction = steps[index];
-      editingStepIndex = index;
-    });
-  }
-
   void _deleteStep(int index) {
     setState(() {
       steps.removeAt(index);
@@ -115,75 +108,93 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
   }
 
   void _showSnackBar(String msg, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: color,
-      ),
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: color));
+  }
+
+  Future<String?> _uploadToCloudinary(Uint8List imageBytes) async {
+    const cloudName = 'dufmk32fr';
+    const uploadPreset = 'flutter_Recipedia';
+
+    final fileName = recipeNameController.text.trim().replaceAll('/', '_');
+    final url = Uri.parse(
+      'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
     );
+
+    final request =
+        http.MultipartRequest('POST', url)
+          ..fields['upload_preset'] = uploadPreset
+          ..fields['public_id'] = fileName
+          ..files.add(
+            http.MultipartFile.fromBytes(
+              'file',
+              imageBytes,
+              filename: '$fileName.jpg',
+            ),
+          );
+
+    final response = await request.send();
+
+    if (response.statusCode == 200) {
+      final responseData = await response.stream.bytesToString();
+      final result = json.decode(responseData);
+      return result['secure_url'];
+    } else {
+      final error = await response.stream.bytesToString();
+      print('Cloudinary Upload Error: $error');
+      return null;
+    }
   }
 
   Future<void> _uploadRecipe() async {
-    if (_imageBytes == null ||
-        recipeNameController.text.isEmpty ||
-        servingsController.text.isEmpty ||
-        durationController.text.isEmpty ||
-        ingredients.isEmpty ||
-        steps.isEmpty) {
-      _showSnackBar("Please complete all fields including image!", Colors.red);
-      return;
-    }
-
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      _showSnackBar("User not logged in!", Colors.red);
-      return;
-    }
-
-    final base64Image = base64Encode(_imageBytes!);
-
-    final doc = {
-      'title': recipeNameController.text.trim(),
-      'category': category,
-      'servings': servingsController.text.trim(),
-      'duration': '${durationController.text.trim()} $durationUnit',
-      'ingredients': ingredients,
-      'steps': steps,
-      'spiciness': spiciness,
-      'difficulty': difficulty,
-      'image': base64Image,
-      'private': isPrivate,
-      'uid': user.uid,
-      'timestamp': FieldValue.serverTimestamp(),
-    };
-
     try {
-      await FirebaseFirestore.instance.collection('recipes').add(doc);
-      _showSnackBar('Recipe uploaded successfully!', Colors.blue);
-      Navigator.pop(context);
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) throw 'You must be logged in';
+
+      if (recipeNameController.text.trim().isEmpty ||
+          durationController.text.trim().isEmpty ||
+          servingsController.text.trim().isEmpty ||
+          _imageBytes == null ||
+          ingredients.isEmpty ||
+          steps.isEmpty) {
+        _showSnackBar(
+          'Please complete all fields and upload an image.',
+          Colors.orange,
+        );
+        return;
+      }
+
+      _showSnackBar('Uploading recipe...', const Color.fromARGB(255, 91, 0, 0));
+
+      final imageUrl = await _uploadToCloudinary(_imageBytes!);
+      if (imageUrl == null) throw 'Image upload failed';
+
+      await FirebaseFirestore.instance.collection('recipes').add({
+        'userId': uid,
+        'title': recipeNameController.text.trim(),
+        'category': category,
+        'duration': '${durationController.text.trim()} $durationUnit',
+        'servings': servingsController.text.trim(),
+        'difficulty': difficulty.round(),
+        'spiciness': spiciness.round(),
+        'ingredients': ingredients,
+        'steps': steps,
+        'isPrivate': isPrivate,
+        'imageUrl': imageUrl,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      _showSnackBar('Recipe uploaded!', Colors.green);
+      // Navigate to HomepageScreen directly
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const HomepageScreen()),
+        (Route<dynamic> route) => false,
+      );
     } catch (e) {
-      _showSnackBar('Error uploading: $e', Colors.red);
+      _showSnackBar('Error: $e', Colors.red);
     }
-  }
-
-  Widget _fieldLabel(String text) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-      );
-
-  Widget _customCard(Widget child) => Container(
-        padding: const EdgeInsets.all(12),
-        margin: const EdgeInsets.symmetric(vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
-        ),
-        child: child,
-      );
-
-  void _cancelRecipe() {
-    Navigator.pop(context);
   }
 
   @override
@@ -191,8 +202,9 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF6F0),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF8B0000),
         title: const Text('Create New Recipe'),
+        backgroundColor: const Color(0xFF8B0000),
+        foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -201,126 +213,236 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
           children: [
             _imageBytes != null
                 ? ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.memory(_imageBytes!, height: 180, fit: BoxFit.cover, width: double.infinity),
-                  )
-                : Container(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.memory(
+                    _imageBytes!,
+                    width: double.infinity,
                     height: 180,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Center(child: Text('No image selected')),
+                    fit: BoxFit.cover,
                   ),
+                )
+                : Container(
+                  height: 180,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.grey[300],
+                  ),
+                  child: const Center(child: Text('No image selected')),
+                ),
             const SizedBox(height: 8),
             ElevatedButton.icon(
               onPressed: _pickImage,
+              icon: const Icon(Icons.upload),
+              label: const Text('Upload Image'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFFE0B2),
                 foregroundColor: Colors.black,
               ),
-              icon: const Icon(Icons.upload),
-              label: const Text('Upload Image'),
             ),
-            const SizedBox(height: 20),
-            _fieldLabel('Recipe Name'),
-            _customCard(TextField(controller: recipeNameController, decoration: const InputDecoration.collapsed(hintText: 'Enter recipe name'))),
-            _fieldLabel('Category'),
-            _customCard(
+            const SizedBox(height: 15),
+            _label('Recipe Name'),
+            _card(
+              TextField(
+                controller: recipeNameController,
+                decoration: const InputDecoration.collapsed(
+                  hintText: 'Enter name',
+                ),
+              ),
+            ),
+
+            _label('Category'),
+            _card(
               DropdownButton<String>(
                 isExpanded: true,
                 value: category,
                 onChanged: (val) => setState(() => category = val!),
-                items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                items:
+                    categories
+                        .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                        .toList(),
               ),
             ),
-            _fieldLabel('Servings'),
-            _customCard(TextField(controller: servingsController, decoration: const InputDecoration.collapsed(hintText: 'e.g. 4'))),
-            _fieldLabel('Cook Duration'),
-            _customCard(
+
+            _label('Servings'),
+            _card(
+              TextField(
+                controller: servingsController,
+                decoration: const InputDecoration.collapsed(hintText: 'e.g. 4'),
+              ),
+            ),
+
+            _label('Cook Duration'),
+            _card(
               Row(
                 children: [
-                  Expanded(child: TextField(controller: durationController, keyboardType: TextInputType.number, decoration: const InputDecoration.collapsed(hintText: 'e.g. 30'))),
+                  Expanded(
+                    child: TextField(
+                      controller: durationController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration.collapsed(
+                        hintText: 'e.g. 30',
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   DropdownButton<String>(
                     value: durationUnit,
                     onChanged: (val) => setState(() => durationUnit = val!),
-                    items: durationUnits.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
+                    items:
+                        durationUnits
+                            .map(
+                              (u) => DropdownMenuItem(value: u, child: Text(u)),
+                            )
+                            .toList(),
                   ),
                 ],
               ),
             ),
-            _fieldLabel('Ingredients'),
-            _customCard(
+
+            _label('Spiciness'),
+            _card(
+              Slider(
+                value: spiciness,
+                onChanged: (v) => setState(() => spiciness = v),
+                min: 1,
+                max: 5,
+                divisions: 4,
+                label: spiciness.round().toString(),
+              ),
+            ),
+
+            _label('Difficulty'),
+            _card(
+              Slider(
+                value: difficulty,
+                onChanged: (v) => setState(() => difficulty = v),
+                min: 1,
+                max: 5,
+                divisions: 4,
+                label: difficulty.round().toString(),
+              ),
+            ),
+
+            _label('Private? Only show on Homepage'),
+            Switch(
+              value: isPrivate,
+              onChanged: (val) => setState(() => isPrivate = val),
+              activeColor: const Color(0xFF8B0000),
+            ),
+
+            const SizedBox(height: 15),
+            _label('Ingredients'),
+            _card(
               Row(
                 children: [
-                  Expanded(child: TextField(onChanged: (val) => amount = val, controller: TextEditingController(text: amount), decoration: const InputDecoration(hintText: 'Amount'))),
+                  Expanded(
+                    child: TextField(
+                      onChanged: (val) => amount = val,
+                      controller: TextEditingController(text: amount),
+                      decoration: const InputDecoration(hintText: 'Amount'),
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   DropdownButton<String>(
                     value: unit,
                     onChanged: (val) => setState(() => unit = val!),
-                    items: units.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
+                    items:
+                        units
+                            .map(
+                              (u) => DropdownMenuItem(value: u, child: Text(u)),
+                            )
+                            .toList(),
                   ),
                   const SizedBox(width: 8),
-                  Expanded(child: TextField(onChanged: (val) => ingredientName = val, controller: TextEditingController(text: ingredientName), decoration: const InputDecoration(hintText: 'Ingredient'))),
-                  IconButton(icon: Icon(editingIngredientIndex == null ? Icons.add : Icons.check, color: Colors.green), onPressed: _addOrUpdateIngredient),
+                  Expanded(
+                    child: TextField(
+                      onChanged: (val) => ingredientName = val,
+                      controller: TextEditingController(text: ingredientName),
+                      decoration: const InputDecoration(hintText: 'Ingredient'),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      editingIngredientIndex == null ? Icons.add : Icons.check,
+                      color: Colors.green,
+                    ),
+                    onPressed: _addOrUpdateIngredient,
+                  ),
                 ],
               ),
             ),
             ...ingredients.asMap().entries.map((entry) {
               final i = entry.key;
               final ing = entry.value;
-              return _customCard(
+              return _card(
                 Row(
                   children: [
-                    Expanded(child: Text('- ${ing['amount']} ${ing['unit']} ${ing['name']}')),
-                    IconButton(icon: const Icon(Icons.edit, color: Colors.orange), onPressed: () => _editIngredient(i)),
-                    IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () => _deleteIngredient(i)),
+                    Expanded(
+                      child: Text(
+                        '- ${ing['amount']} ${ing['unit']} ${ing['name']}',
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => _deleteIngredient(i),
+                    ),
                   ],
                 ),
               );
             }),
-            const SizedBox(height: 20),
-            _fieldLabel('Steps'),
-            _customCard(
+
+            const SizedBox(height: 15),
+            _label('Steps'),
+            _card(
               Row(
                 children: [
-                  Expanded(child: TextField(onChanged: (val) => stepInstruction = val, controller: TextEditingController(text: stepInstruction), decoration: const InputDecoration(hintText: 'Enter step'))),
-                  IconButton(icon: Icon(editingStepIndex == null ? Icons.add : Icons.check, color: Colors.orange), onPressed: _addOrUpdateStep),
+                  Expanded(
+                    child: TextField(
+                      onChanged: (val) => stepInstruction = val,
+                      controller: TextEditingController(text: stepInstruction),
+                      decoration: const InputDecoration(hintText: 'Enter step'),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      editingStepIndex == null ? Icons.add : Icons.check,
+                      color: Colors.orange,
+                    ),
+                    onPressed: _addOrUpdateStep,
+                  ),
                 ],
               ),
             ),
             ...steps.asMap().entries.map((entry) {
               final i = entry.key;
-              final step = entry.value;
-              return _customCard(
+              return _card(
                 Row(
                   children: [
-                    Expanded(child: Text('${i + 1}. $step')),
-                    IconButton(icon: const Icon(Icons.edit, color: Colors.orange), onPressed: () => _editStep(i)),
-                    IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () => _deleteStep(i)),
+                    Expanded(child: Text('${i + 1}. ${steps[i]}')),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => _deleteStep(i),
+                    ),
                   ],
                 ),
               );
             }),
-            _fieldLabel('Spiciness'),
-            _customCard(Slider(value: spiciness, min: 1, max: 5, divisions: 4, label: spiciness.round().toString(), onChanged: (v) => setState(() => spiciness = v))),
-            _fieldLabel('Difficulty'),
-            _customCard(Slider(value: difficulty, min: 1, max: 5, divisions: 4, label: difficulty.round().toString(), onChanged: (v) => setState(() => difficulty = v))),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Switch(value: isPrivate, onChanged: (v) => setState(() => isPrivate = v)),
-                Text("Private? Only show on Homepage", style: TextStyle(fontWeight: FontWeight.w500)),
-              ],
-            ),
-            const SizedBox(height: 20),
+
+            const SizedBox(height: 25),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                ElevatedButton(onPressed: _uploadRecipe, child: const Text('Upload')),
+                ElevatedButton(
+                  onPressed: _uploadRecipe,
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                  child: const Text('Upload'),
+                ),
                 const SizedBox(width: 10),
-                ElevatedButton(onPressed: _cancelRecipe, style: ElevatedButton.styleFrom(backgroundColor: Colors.red), child: const Text('Cancel')),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  child: const Text('Cancel'),
+                ),
               ],
             ),
           ],
@@ -328,4 +450,23 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
       ),
     );
   }
+
+  Widget _label(String text) => Padding(
+    padding: const EdgeInsets.only(top: 16, bottom: 6),
+    child: Text(
+      text,
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+    ),
+  );
+
+  Widget _card(Widget child) => Container(
+    padding: const EdgeInsets.all(12),
+    margin: const EdgeInsets.only(bottom: 10),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
+    ),
+    child: child,
+  );
 }
