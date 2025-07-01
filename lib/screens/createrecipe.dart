@@ -5,6 +5,8 @@ import 'package:image_picker/image_picker.dart';
 void main() => runApp(MaterialApp(home: RecipeCreationScreen()));
 
 class RecipeCreationScreen extends StatefulWidget {
+  const RecipeCreationScreen({super.key});
+
   @override
   _AddRecipePageState createState() => _AddRecipePageState();
 }
@@ -370,7 +372,7 @@ class _AddRecipePageState extends State<RecipeCreationScreen> {
 class HomePage extends StatelessWidget {
   final String category;
 
-  HomePage({required this.category});
+  const HomePage({super.key, required this.category});
 
   @override
   Widget build(BuildContext context) {

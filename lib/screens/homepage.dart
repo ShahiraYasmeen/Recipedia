@@ -192,7 +192,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                           MaterialPageRoute(
                             builder: (context) => RecipeDetailPage(
                             title: foodname[indexx][index],
-                            imagePath: 'assets/${categoryname[indexx]}${index}.jpg',
+                            imagePath: 'assets/${categoryname[indexx]}$index.jpg',
                             ),
                           ),
                           );
