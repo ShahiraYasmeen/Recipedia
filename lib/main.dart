@@ -21,12 +21,14 @@ class RecipediaApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Recipedia_App',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFFFAD7A0)),
         useMaterial3: true,
+        brightness: Brightness.light,
+        primaryColor: Color(0xFFFAD7A0),
       ),
-      debugShowCheckedModeBanner: false, // Disable debug banner
-      home: const SplashScreen(), // Starting screen
+      home: const SplashScreen(),
     );
   }
 }
@@ -44,7 +46,7 @@ class _BottomNavBarExampleState extends State<BottomNavBarExample> {
   final List<Widget> _pages = [
     const HomepageScreen(),
     const CommunityScreen(),
-    RecipeCreationScreen(), // Use the correct class name as defined in createrecipe.dart
+    RecipeCreationScreen(),
     const ViewProfileScreen(),
   ];
 
