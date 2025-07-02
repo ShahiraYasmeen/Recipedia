@@ -1,10 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
 
@@ -20,7 +19,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _messageController = TextEditingController();
 
   final ImagePicker _picker = ImagePicker();
-  File? _selectedImage;
+  XFile? _selectedImage;
   String? _existingImageUrl;
 
   @override
@@ -50,26 +49,41 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
-        _selectedImage = File(pickedFile.path);
+        _selectedImage = pickedFile;
       });
     }
   }
 
-  Future<String> _uploadImage(File imageFile) async {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
-    final ref = FirebaseStorage.instance.ref().child('user_images').child('$uid.jpg');
-    await ref.putFile(imageFile);
-    return await ref.getDownloadURL();
-  }
+  Future<String> _uploadImageToCloudinary(XFile imageFile) async {
+    final cloudName = 'dufmk32fr';
+    final uploadPreset = 'flutter_Recipedia';
+    
+    final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload?upload_preset=$uploadPreset');
 
-  Future<void> _saveProfile() async {
+    final bytes = await imageFile.readAsBytes();
+    final request = http.MultipartRequest('POST', url);
+      request.fields['upload_preset'] = uploadPreset;
+      request.files.add(http.MultipartFile.fromBytes('file', bytes, filename: imageFile.path.split('/').last  ));
+  
+    final response = await request.send();
+
+  if (response.statusCode == 200) {
+    final responseData = await http.Response.fromStream(response);
+    final data = json.decode(responseData.body);
+    return data['secure_url'] as String;
+  } else {
+    throw Exception('Failed to upload image: ${response.statusCode}');
+  }
+}
+
+Future<void> _saveProfile() async {
   if (_formKey.currentState!.validate()) {
     final uid = FirebaseAuth.instance.currentUser!.uid;
     String? imageUrl = _existingImageUrl;
 
     try {
       if (_selectedImage != null) {
-        imageUrl = await _uploadImage(_selectedImage!);
+        imageUrl = await _uploadImageToCloudinary(_selectedImage!);
       }
 
       await FirebaseFirestore.instance.collection('users').doc(uid).set({
@@ -97,7 +111,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final avatar = _selectedImage != null
-        ? FileImage(_selectedImage!)
+        ? Image.network(_selectedImage!.path).image
         : _existingImageUrl != null
             ? NetworkImage(_existingImageUrl!)
             : const AssetImage('assets/avatar.jpg') as ImageProvider;
@@ -127,7 +141,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         right: 0,
                         child: IconButton(
                           icon: const Icon(Icons.edit),
-                          color: const Color(0xFF8B0000),
+                          color: const Color.fromARGB(255, 0, 0, 0),
                           onPressed: _pickImage,
                         ),
                       ),

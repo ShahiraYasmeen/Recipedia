@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'community_recipe_detail_page.dart';
 
 class CommunityScreen extends StatefulWidget {
@@ -63,6 +64,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
   void initState() {
     super.initState();
     fetchPublicRecipes();
+    fetchLikedRecipes();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollController.animateTo(
         30,
@@ -91,6 +94,23 @@ class _CommunityScreenState extends State<CommunityScreen> {
       }).toList();
     });
   }
+
+  Future<void> fetchLikedRecipes() async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user != null) {
+    final snap = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('liked_recipes')
+        .get();
+
+    setState(() {
+      likedRecipes.clear();
+      likedRecipes.addAll(snap.docs.map((doc) => doc.id));
+    });
+  }
+}
+
 
   List<Map<String, dynamic>> getFilteredRecipes() {
     final base = selectedCategoryIndex == 0
@@ -262,18 +282,56 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                 isLiked ? Icons.favorite : Icons.favorite_border,
                                 color: isLiked ? Colors.red : Colors.grey,
                               ),
-                              onPressed: () {
+                              onPressed: () async {
+                                final currentUser = FirebaseAuth.instance.currentUser;
+                                if (currentUser == null) return;
+
+                                final recipeId = r['id'] ?? r['title'];
+                                final docRef = FirebaseFirestore.instance
+                                    .collection('users')
+                                    .doc(currentUser.uid)
+                                    .collection('liked_recipes')
+                                    .doc(recipeId);
+
                                 setState(() {
-                                  if (isLiked) {
-                                    likedRecipes.remove(r['id'] ?? r['title']);
+                                  if (likedRecipes.contains(recipeId)) {
+                                    likedRecipes.remove(recipeId);
                                     r['likes'] = (r['likes'] ?? 1) - 1;
                                   } else {
-                                    likedRecipes.add(r['id'] ?? r['title']);
+                                    likedRecipes.add(recipeId);
                                     r['likes'] = (r['likes'] ?? 0) + 1;
                                   }
                                 });
+
+                                try {
+                                  final recipeRef = FirebaseFirestore.instance.collection('recipes').doc(r['id']);
+
+                                  if (likedRecipes.contains(recipeId)) {
+                                    // Save to liked_recipes and increment likes
+                                    await docRef.set({
+                                      'title': r['title'],
+                                      'author': r['author'],
+                                      'image': r['image'],
+                                      'duration': r['duration'],
+                                      'difficulty': r['difficulty'],
+                                      'servings': r['servings'],
+                                      'likedAt': FieldValue.serverTimestamp(),
+                                    });
+                                    if (r['id'] != null) {
+                                      await recipeRef.update({'likes': FieldValue.increment(1)});
+                                    }
+                                  } else {
+                                    // Remove from liked_recipes and decrement likes
+                                    await docRef.delete();
+                                    if (r['id'] != null) {
+                                      await recipeRef.update({'likes': FieldValue.increment(-1)});
+                                    }
+                                  }
+                                } catch (e) {
+                                  print('Error updating like status: $e');
+                                }
                               },
-                            ),
+                              ),
                             Text('${r['likes'] ?? 0}', style: const TextStyle(fontSize: 12)),
                           ],
                         )

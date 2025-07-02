@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'edit_profile.dart';
 import 'account.dart';
 import 'login.dart';
+import 'liked_recipe.dart';
 
 class ViewProfileScreen extends StatefulWidget {
   const ViewProfileScreen({super.key});
@@ -63,13 +64,13 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 254, 246, 255),
+      backgroundColor: const Color(0xFFFFF6F0),
       appBar: AppBar(
         title: const Text("Profile", style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF8B0000),
         titleTextStyle: const TextStyle(
           color: Colors.white,
-          fontSize: 20,
+          fontSize: 30,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -80,7 +81,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 60),
                     Center(
                       child: CircleAvatar(
                         radius: 50,
@@ -127,16 +128,16 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                               const Icon(
                                 Icons.location_on,
                                 color: Color(0xFF8B0000),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              _location!,
-                              style: const TextStyle(color: Colors.grey),
-                            ),
-                          ],
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _location!,
+                                style: const TextStyle(color: Colors.grey),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
 
                     if (_message != null && _message!.isNotEmpty)
                       Padding(
@@ -144,13 +145,13 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                           horizontal: 16.0,
                           vertical: 4,
                         ),
-                        child: Center (
-                        child: Text(
-                          '"$_message"',
-                          style: const TextStyle(color: Colors.grey),
+                        child: Center(
+                          child: Text(
+                            '"$_message"',
+                            style: const TextStyle(color: Colors.grey),
+                          ),
                         ),
                       ),
-                    ),
 
                     const SizedBox(height: 16),
                     const Padding(
@@ -175,6 +176,15 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                         ),
                       );
                     }),
+
+                     _buildTile(Icons.favorite, "Liked Recipes", () {
+                       Navigator.push(
+                         context,
+                         MaterialPageRoute(
+                           builder: (_) => const LikedRecipeScreen(),
+                         ),
+                       );
+                     }),
 
                     const Spacer(),
 

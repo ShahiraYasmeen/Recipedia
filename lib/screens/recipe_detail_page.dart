@@ -122,7 +122,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  ...ingredients.map((item) => Text('- $item')).toList(),
+                  ...ingredients.map((item) => Text('- $item')),
 
                   const SizedBox(height: 20),
                   const Text(

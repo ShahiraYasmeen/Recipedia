@@ -101,13 +101,13 @@ class AccountsScreen extends StatelessWidget {
   }
 
   void _showEmailDialog(BuildContext context) {
-    final TextEditingController _emailController = TextEditingController();
+    final TextEditingController emailController = TextEditingController();
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Change Email"),
         content: TextField(
-          controller: _emailController,
+          controller: emailController,
           decoration: const InputDecoration(labelText: "New Email"),
         ),
         actions: [
@@ -116,7 +116,7 @@ class AccountsScreen extends StatelessWidget {
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B0000)),
             onPressed: () {
               Navigator.pop(context);
-              _reauthenticateAndUpdateEmail(context, _emailController.text.trim());
+              _reauthenticateAndUpdateEmail(context, emailController.text.trim());
             },
             child: const Text("Update", style: TextStyle(color: Colors.white)),
           ),
@@ -126,8 +126,8 @@ class AccountsScreen extends StatelessWidget {
   }
 
   void _showPasswordDialog(BuildContext context) {
-    final TextEditingController _passController = TextEditingController();
-    final TextEditingController _confirmPassController = TextEditingController();
+    final TextEditingController passController = TextEditingController();
+    final TextEditingController confirmPassController = TextEditingController();
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -136,12 +136,12 @@ class AccountsScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              controller: _passController,
+              controller: passController,
               obscureText: true,
               decoration: const InputDecoration(labelText: "New Password"),
             ),
             TextField(
-              controller: _confirmPassController,
+              controller: confirmPassController,
               obscureText: true,
               decoration: const InputDecoration(labelText: "Confirm Password"),
             ),
@@ -152,10 +152,10 @@ class AccountsScreen extends StatelessWidget {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B0000)),
             onPressed: () {
-              if (_passController.text == _confirmPassController.text &&
-                  _passController.text.length >= 6) {
+              if (passController.text == confirmPassController.text &&
+                  passController.text.length >= 6) {
                 Navigator.pop(context);
-                _reauthenticateAndUpdatePassword(context, _passController.text.trim());
+                _reauthenticateAndUpdatePassword(context, passController.text.trim());
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Password too short or doesn't match")),
