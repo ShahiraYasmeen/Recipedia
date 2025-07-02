@@ -8,7 +8,10 @@ import 'package:http/http.dart' as http;
 import 'homepage.dart';
 
 class RecipeCreationScreen extends StatefulWidget {
-  const RecipeCreationScreen({super.key});
+  final Map<String, dynamic>? recipeData;
+  final String? docId;
+
+  const RecipeCreationScreen({super.key, this.recipeData, this.docId});
 
   @override
   State<RecipeCreationScreen> createState() => _RecipeCreationScreenState();
@@ -49,6 +52,39 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
 
   String stepInstruction = '';
   int? editingStepIndex;
+
+
+    @override
+  void initState() {
+    super.initState();
+    if (widget.recipeData != null) {
+      final data = widget.recipeData!;
+      recipeNameController.text = data['title'] ?? '';
+      category = data['category'] ?? 'Appetizer';
+      servingsController.text = data['servings'] ?? '';
+      final durationParts = (data['duration'] ?? '30 mins').split(' ');
+      if (durationParts.length == 2) {
+        durationController.text = durationParts[0];
+        durationUnit = durationParts[1];
+      }
+      spiciness = (data['spiciness'] ?? 1).toDouble();
+      difficulty = (data['difficulty'] ?? 1).toDouble();
+      isPrivate = data['isPrivate'] ?? false;
+      ingredients = List<Map<String, String>>.from(
+        (data['ingredients'] ?? []).map((i) => Map<String, String>.from(i)),
+      );
+      steps = List<String>.from(data['steps'] ?? []);
+
+      final imageUrl = data['imageUrl'];
+      if (imageUrl != null && imageUrl.toString().startsWith('http')) {
+        http.get(Uri.parse(imageUrl)).then((res) {
+          if (res.statusCode == 200) {
+            setState(() => _imageBytes = res.bodyBytes);
+          }
+        });
+      }
+    }
+  }
 
   Future<void> _pickImage() async {
     final picked = await picker.pickImage(source: ImageSource.gallery);
@@ -170,7 +206,7 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
       final imageUrl = await _uploadToCloudinary(_imageBytes!);
       if (imageUrl == null) throw 'Image upload failed';
 
-      await FirebaseFirestore.instance.collection('recipes').add({
+      final recipeMap = {
         'userId': uid,
         'title': recipeNameController.text.trim(),
         'category': category,
@@ -183,15 +219,38 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
         'isPrivate': isPrivate,
         'imageUrl': imageUrl,
         'createdAt': FieldValue.serverTimestamp(),
-      });
+      };
 
-      _showSnackBar('Recipe uploaded!', Colors.green);
-      // Navigate to HomepageScreen directly
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const HomepageScreen()),
-        (Route<dynamic> route) => false,
-      );
+      if (widget.docId != null) {
+        await FirebaseFirestore.instance.collection('recipes').doc(widget.docId).update(recipeMap);
+        _showSnackBar('Recipe updated!', Colors.green);
+      } else {
+        final recipeMap = {
+        'userId': uid,
+        'title': recipeNameController.text.trim(),
+        'category': category,
+        'duration': '${durationController.text.trim()} $durationUnit',
+        'servings': servingsController.text.trim(),
+        'difficulty': difficulty.round(),
+        'spiciness': spiciness.round(),
+        'ingredients': ingredients,
+        'steps': steps,
+        'isPrivate': isPrivate,
+        'imageUrl': imageUrl,
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+
+      if (widget.docId != null) {
+        await FirebaseFirestore.instance.collection('recipes').doc(widget.docId).update(recipeMap);
+        _showSnackBar('Recipe updated!', Colors.green);
+      } else {
+        await FirebaseFirestore.instance.collection('recipes').add(recipeMap);
+        _showSnackBar('Recipe uploaded!', Colors.green);
+      }
+        _showSnackBar('Recipe uploaded!', Colors.green);
+      }
+
+      Navigator.pop(context); // Go back to the RecipeDetailPage
     } catch (e) {
       _showSnackBar('Error: $e', Colors.red);
     }

@@ -78,8 +78,8 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
           isLoading
               ? const Center(child: CircularProgressIndicator())
               : SafeArea(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child:  ListView(
+                  padding: const EdgeInsets.only(bottom: 16),
                   children: [
                     const SizedBox(height: 60),
                     Center(

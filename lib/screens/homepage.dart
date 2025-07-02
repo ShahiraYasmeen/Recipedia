@@ -219,7 +219,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                     duration: const Duration(milliseconds: 500),
                     opacity: _showRightArrow ? 1.0 : 0.0,
                     child: Container(
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.white70,
                         shape: BoxShape.circle,
                       ),
@@ -289,36 +289,41 @@ class _HomepageScreenState extends State<HomepageScreen> {
                                 ),
                               ),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                              child: Container(
-                                height: 120,
-                                width: 129,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20),
-                                  image: DecorationImage(
-                                    image: imageWidget.image,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
                             GestureDetector(
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => RecipeDetailPage(
+                                   builder: (_) => RecipeDetailPage(
                                       title: r['title'],
                                       imagePath: r['imageUrl'] ?? r['image'] ?? '',
+                                      docId: r['id'],
                                     ),
                                   ),
                                 );
                               },
-                              child: Text(
-                                r['title'] ?? '',
-                                style: const TextStyle(fontSize: 18, color: Colors.black),
+                              child: Column(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                                    child: Container(
+                                      height: 120,
+                                      width: 129,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(20),
+                                        image: DecorationImage(
+                                          image: imageWidget.image,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Text(
+                                    r['title'] ?? '',
+                                    style: const TextStyle(fontSize: 18, color: Colors.black),
+                                  ),
+                                ],
                               ),
                             ),
                           ],

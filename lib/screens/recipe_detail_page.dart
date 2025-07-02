@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
-import 'recipe_data.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'createrecipe.dart';
 
 class RecipeDetailPage extends StatefulWidget {
   final String title;
   final String imagePath;
+  final String docId; // ✅ Add docId from HomepageScreen
 
   const RecipeDetailPage({
     super.key,
     required this.title,
     required this.imagePath,
+    required this.docId,
   });
 
   @override
@@ -16,24 +19,58 @@ class RecipeDetailPage extends StatefulWidget {
 }
 
 class _RecipeDetailPageState extends State<RecipeDetailPage> {
-  void _onDelete() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Delete button clicked (dummy)")),
+  void _onDelete() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Delete'),
+        content: const Text('Are you sure to delete the recipe?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+        ],
+      ),
     );
+
+    if (confirm == true) {
+      await FirebaseFirestore.instance.collection('recipes').doc(widget.docId).delete();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Recipe deleted successfully")),
+      );
+      Navigator.pop(context);
+    }
   }
 
-  void _onEdit() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Edit button clicked (dummy)")),
+  void _onEdit() async {
+    final docSnapshot = await FirebaseFirestore.instance
+        .collection('recipes')
+        .doc(widget.docId)
+        .get();
+
+    if (!docSnapshot.exists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Recipe data not found.")),
+      );
+      return;
+    }
+
+    final data = docSnapshot.data();
+
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RecipeCreationScreen(
+          recipeData: data!,
+          docId: widget.docId,
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final data = recipes[widget.title];
-    final ingredients = data?['ingredients'] as List<String>? ?? [];
-    final steps = data?['steps'] as List<String>? ?? [];
-
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8F5),
       appBar: AppBar(
@@ -55,12 +92,19 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     bottomLeft: Radius.circular(12),
                     bottomRight: Radius.circular(12),
                   ),
-                  child: Image.asset(
-                    widget.imagePath,
-                    width: double.infinity,
-                    height: 250,
-                    fit: BoxFit.cover,
-                  ),
+                  child: widget.imagePath.startsWith('http')
+                      ? Image.network(
+                          widget.imagePath,
+                          width: double.infinity,
+                          height: 250,
+                          fit: BoxFit.cover,
+                        )
+                      : Image.asset(
+                          widget.imagePath,
+                          width: double.infinity,
+                          height: 250,
+                          fit: BoxFit.cover,
+                        ),
                 ),
                 Positioned(
                   top: 16,
@@ -88,7 +132,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               ],
             ),
 
-            // Recipe Details
+            // Static details
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
               child: Column(
@@ -116,26 +160,21 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     ],
                   ),
                   const SizedBox(height: 20),
-
                   const Text(
                     'Ingredients',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  ...ingredients.map((item) => Text('- $item')),
-
+                  const Text('- Sample Ingredient 1'),
+                  const Text('- Sample Ingredient 2'),
                   const SizedBox(height: 20),
                   const Text(
                     'Steps',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  ...steps.asMap().entries.map(
-                        (entry) => Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: Text('${entry.key + 1}. ${entry.value}'),
-                        ),
-                      ),
+                  const Text('1. Sample step one.'),
+                  const Text('2. Sample step two.'),
                 ],
               ),
             ),
