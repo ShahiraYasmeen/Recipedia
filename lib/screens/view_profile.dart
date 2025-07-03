@@ -236,22 +236,3 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
   }
 }
 
-class _StatItem extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _StatItem({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        Text(label, style: const TextStyle(color: Colors.grey)),
-      ],
-    );
-  }
-}
