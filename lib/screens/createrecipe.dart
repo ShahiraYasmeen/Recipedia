@@ -38,7 +38,7 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
     'Beverage',
     'Snacks',
   ];
-  final List<String> units = ['gram', 'kg', 'ml', 'oz', 'can'];
+  final List<String> units = ['gram', 'kg', 'ml', 'oz', 'can', 'pcs', 'cup', 'tbsp', 'tsp', 'cm', 'inch'];
   final List<String> durationUnits = ['sec', 'mins', 'hours'];
 
   List<Map<String, String>> ingredients = [];
@@ -147,6 +147,33 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
       context,
     ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: color));
   }
+
+  void _showCancelDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Cancel Upload'),
+            GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: const Icon(Icons.close),
+            ),
+          ],
+        ),
+        content: const Text('Are you sure you want to cancel? Your data will not be saved.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   Future<String?> _uploadToCloudinary(Uint8List imageBytes) async {
     const cloudName = 'dufmk32fr';
@@ -381,13 +408,6 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
               ),
             ),
 
-            _label('Private? Only show on Homepage'),
-            Switch(
-              value: isPrivate,
-              onChanged: (val) => setState(() => isPrivate = val),
-              activeColor: const Color(0xFF8B0000),
-            ),
-
             const SizedBox(height: 15),
             _label('Ingredients'),
             _card(
@@ -471,6 +491,7 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
                 ],
               ),
             ),
+
             ...steps.asMap().entries.map((entry) {
               final i = entry.key;
               return _card(
@@ -486,6 +507,15 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
               );
             }),
 
+            // ✅ MOVED TOGGLE BUTTON POSITION START
+            _label('Private? Only show on Homepage'),
+            Switch(
+              value: isPrivate,
+              onChanged: (val) => setState(() => isPrivate = val),
+              activeColor: const Color(0xFF8B0000),
+            ),
+            // ✅ MOVED TOGGLE BUTTON POSITION END
+
             const SizedBox(height: 25),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -497,7 +527,7 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
                 ),
                 const SizedBox(width: 10),
                 ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => _showCancelDialog(context),
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                   child: const Text('Cancel'),
                 ),
