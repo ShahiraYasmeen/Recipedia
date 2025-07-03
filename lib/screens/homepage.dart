@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'recipe_detail_page.dart';
+import 'recipe_data.dart'; // Assuming you have a file with static recipe data
 
 class HomepageScreen extends StatefulWidget {
   const HomepageScreen({super.key});
@@ -290,18 +291,31 @@ class _HomepageScreenState extends State<HomepageScreen> {
                               ),
                             ),
                             GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                   builder: (_) => RecipeDetailPage(
-                                      title: r['title'],
-                                      imagePath: r['imageUrl'] ?? r['image'] ?? '',
-                                      docId: r['id'],
+                             onTap: () {
+                              final isStatic = r['image'] != null; // crude check for static recipe
+                                  List<String> ingredients = [];
+                                  List<String> steps = [];
+                                  if (isStatic) {
+                                    final data = staticRecipeData[r['title']];
+                                    ingredients = List<String>.from(data?['ingredients'] ?? []);
+                                    steps = List<String>.from(data?['steps'] ?? []);
+                                  } else {
+                                    ingredients = List<String>.from(r['ingredients'] ?? []);
+                                    steps = List<String>.from(r['steps'] ?? []);
+                                  }
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => RecipeDetailPage(
+                                        title: r['title'],
+                                        imagePath: r['imageUrl'] ?? r['image'] ?? '',
+                                        docId: r['id'],
+                                        ingredients: ingredients,
+                                        steps: steps,
+                                      ),
                                     ),
-                                  ),
-                                );
-                              },
+                                  );
+                                },
                               child: Column(
                                 children: [
                                   Padding(

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'community_recipe_detail_page.dart';
+import 'community_recipe_data.dart';
+
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -29,34 +31,24 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   final List<List<Map<String, dynamic>>> recipeData = [
     [
-      {'title': 'Salmon Toast', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/App0.jpg', 'author': 'Amy Wong', 'likes': 2},
-      {'title': 'Cheese Bites', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/App1.jpg', 'author': 'John Smith', 'likes': 3},
-      {'title': 'Spring Rolls', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/App2.jpg', 'author': 'Lisa Chen', 'likes': 4},
-      {'title': 'Mini Quiche', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/App3.jpg', 'author': 'Karen Lee', 'likes': 5},
+      {'title': 'Bruschetta', 'duration': '15 mins', 'difficulty': 'Easy', 'servings': '4', 'image': 'assets/CommApp0.jpeg', 'author': 'Luca Romano', 'likes': 5},
+      {'title': 'Stuffed Mushrooms', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '6', 'image': 'assets/CommApp1.jpg', 'author': 'Clara Smith', 'likes': 3},
     ],
     [
-      {'title': 'Grilled Chicken', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/MC0.jpg', 'author': 'Emma Lee', 'likes': 2},
-      {'title': 'Chicken Curry', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/MC1.jpg', 'author': 'Raj Kumar', 'likes': 3},
-      {'title': 'Beef Stew', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/MC2.jpg', 'author': 'Ahmad Zaki', 'likes': 4},
-      {'title': 'Seafood Pasta', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/MC3.jpg', 'author': 'Nina Wong', 'likes': 5},
+      {'title': 'Spaghetti Carbonara', 'duration': '30 mins', 'difficulty': 'Medium', 'servings': '2', 'image': 'assets/CommMC0.jpeg', 'author': 'Marco Bellini', 'likes': 8},
+      {'title': 'Grilled Chicken Rice Bowl', 'duration': '40 mins', 'difficulty': 'Hard', 'servings': '3', 'image': 'assets/CommMC1.jpg', 'author': 'Siti Aisyah', 'likes': 6},
     ],
     [
-      {'title': 'Strawberry Tart', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/Dess0.jpg', 'author': 'Lina', 'likes': 2},
-      {'title': 'Lava Cake', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/Dess1.jpg', 'author': 'Farah Lim', 'likes': 3},
-      {'title': 'Ice Cream Sandwich', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/Dess2.jpg', 'author': 'Ken Wong', 'likes': 4},
-      {'title': 'Pudding Cup', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/Dess3.jpg', 'author': 'Chloe Tan', 'likes': 5},
+      {'title': 'Marshmallow Nougat', 'duration': '25 mins', 'difficulty': 'Easy', 'servings': '4', 'image': 'assets/CommDessert0.jpg', 'author': 'Noah James', 'likes': 9},
+      {'title': 'Mango Pudding', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '4', 'image': 'assets/CommDessert1.jpg', 'author': 'Mei Lin', 'likes': 4},
     ],
     [
-      {'title': 'Fruit Smoothie', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/Bev0.jpg', 'author': 'Izzah Rahim', 'likes': 2},
-      {'title': 'Iced Latte', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/Bev1.jpg', 'author': 'Jason Ong', 'likes': 3},
-      {'title': 'Matcha Tea', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/Bev2.jpg', 'author': 'Tina Hee', 'likes': 4},
-      {'title': 'Lemonade', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/Bev3.jpg', 'author': 'Ain Adam', 'likes': 5},
+      {'title': 'Iced Matcha Latte', 'duration': '10 mins', 'difficulty': 'Easy', 'servings': '1', 'image': 'assets/CommBev0.jpeg', 'author': 'Hana Suzuki', 'likes': 7},
+      {'title': 'Cha Ba Ang', 'duration': '15 mins', 'difficulty': 'Medium', 'servings': '2', 'image': 'assets/CommBev1.jpg', 'author': 'John Lee', 'likes': 5},
     ],
     [
-      {'title': 'Nachos', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '2', 'image': 'assets/Sna0.jpg', 'author': 'Sarah Chia', 'likes': 2},
-      {'title': 'Popcorn Mix', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/Sna1.jpg', 'author': 'Adam Lim', 'likes': 3},
-      {'title': 'Potato Wedges', 'duration': '30 mins', 'difficulty': 'Hard', 'servings': '4', 'image': 'assets/Sna2.jpg', 'author': 'Lim Wei', 'likes': 4},
-      {'title': 'Granola Bars', 'duration': '35 mins', 'difficulty': 'Easy', 'servings': '5', 'image': 'assets/Sna3.jpg', 'author': 'Joanne Lee', 'likes': 5},
+      {'title': 'French Toast Bites', 'duration': '20 mins', 'difficulty': 'Easy', 'servings': '4', 'image': 'assets/CommSnacks0.jpg', 'author': 'Tommy Lee', 'likes': 6},
+      {'title': 'Potato Pancakes', 'duration': '25 mins', 'difficulty': 'Medium', 'servings': '3', 'image': 'assets/CommSnacks1.jpg', 'author': 'Nur Alia', 'likes': 3},
     ],
   ];
 
@@ -128,6 +120,29 @@ class _CommunityScreenState extends State<CommunityScreen> {
   @override
   Widget build(BuildContext context) {
     final recipes = getFilteredRecipes();
+    final List<Map<String, dynamic>> displayedRecipes;
+
+    if (selectedCategoryIndex == 0) {
+  // All: show all communityRecipes + all recipes
+  displayedRecipes = [
+    ...communityRecipes,
+    ...recipes,
+  ];
+} else {
+  // Filter communityRecipes by category
+  final category = categories[selectedCategoryIndex];
+  final communityByCategory = communityRecipes
+      .where((r) => (r['category'] ?? '') == category)
+      .toList();
+  // Filter recipes by category (if needed)
+  final recipesByCategory = recipes
+      .where((r) => (r['category'] ?? '') == category)
+      .toList();
+  displayedRecipes = [
+    ...communityByCategory,
+    ...recipesByCategory,
+  ];
+}
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8F5),
@@ -210,9 +225,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
           const SizedBox(height: 10),
           Expanded(
             child: ListView.builder(
-              itemCount: recipes.length,
+              itemCount: displayedRecipes.length,
               itemBuilder: (context, index) {
-                final r = recipes[index];
+                final r = displayedRecipes[index];
                 final isLiked = likedRecipes.contains(r['id'] ?? r['title']);
                 final isBase64 = r['image']?.toString().startsWith('data:image') ?? false;
 
@@ -221,7 +236,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (_) => CommunityRecipeDetailPage(recipe: r)),
+                          builder: (_) => CommunityRecipeDetailPage(
+                            recipe: r,
+                            ingredients: List<String>.from(r['ingredients'] ?? []),
+                            steps: List<String>.from(r['steps'] ?? []),
+                          )),
                     );
                   },
                   child: Container(

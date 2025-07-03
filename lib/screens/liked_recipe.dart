@@ -33,7 +33,7 @@ class _LikedRecipeScreenState extends State<LikedRecipeScreen> {
       setState(() {
         likedRecipes =
             snapshot.docs
-                .map((doc) => doc.data() as Map<String, dynamic>)
+                .map((doc) => doc.data())
                 .toList();
         isLoading = false;
       });
@@ -62,7 +62,11 @@ class _LikedRecipeScreenState extends State<LikedRecipeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => CommunityRecipeDetailPage(recipe: likedRecipes[index]),
+                      builder: (_) => CommunityRecipeDetailPage(
+                        recipe: likedRecipes[index],
+                        ingredients: likedRecipes[index]['ingredients'],
+                        steps: likedRecipes[index]['steps'],
+                      ),
                     ),
                   );
                 },

@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'createrecipe.dart';
@@ -6,12 +7,16 @@ class RecipeDetailPage extends StatefulWidget {
   final String title;
   final String imagePath;
   final String docId; // ✅ Add docId from HomepageScreen
+  final List<String> ingredients;
+  final List<String> steps;
 
   const RecipeDetailPage({
     super.key,
     required this.title,
     required this.imagePath,
     required this.docId,
+    required this.ingredients,
+    required this.steps,
   });
 
   @override
@@ -68,8 +73,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
       ),
     );
   }
-
-  @override
+@override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8F5),
@@ -165,16 +169,19 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  const Text('- Sample Ingredient 1'),
-                  const Text('- Sample Ingredient 2'),
+                  ...widget.ingredients.map((item) => Text('- $item')),
                   const SizedBox(height: 20),
                   const Text(
                     'Steps',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  const Text('1. Sample step one.'),
-                  const Text('2. Sample step two.'),
+                  ...widget.steps.asMap().entries.map(
+                        (entry) => Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Text('${entry.key + 1}. ${entry.value}'),
+                        ),
+                      ),
                 ],
               ),
             ),

@@ -1,4 +1,4 @@
-final Map<String, Map<String, dynamic>> recipes = {
+final Map<String, Map<String, dynamic>> staticRecipeData = {
   'Salmon Toast': {
     'ingredients': [
       '4 slices of bread',
