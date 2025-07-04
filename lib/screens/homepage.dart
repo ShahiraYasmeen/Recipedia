@@ -107,7 +107,7 @@ void _loadSavedCommunity() async {
         .get();
     setState(() {
       savedRecipes = snap.docs.map((doc) => doc.id).toSet();
-      savedRecipesData = snap.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+      savedRecipesData = snap.docs.map((doc) => doc.data()).toList();
     });
   }
 
