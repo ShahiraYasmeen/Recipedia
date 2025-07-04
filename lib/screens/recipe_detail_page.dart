@@ -20,18 +20,28 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   void _onDelete() async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm Delete'),
-        content: const Text('Are you sure to delete the recipe?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
-        ],
-      ),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Confirm Delete'),
+            content: const Text('Are you sure to delete the recipe?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
     );
 
     if (confirm == true) {
-      await FirebaseFirestore.instance.collection('recipes').doc(widget.docId).delete();
+      await FirebaseFirestore.instance
+          .collection('recipes')
+          .doc(widget.docId)
+          .delete();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Recipe deleted successfully")),
@@ -41,15 +51,16 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   }
 
   void _onEdit() async {
-    final docSnapshot = await FirebaseFirestore.instance
-        .collection('recipes')
-        .doc(widget.docId)
-        .get();
+    final docSnapshot =
+        await FirebaseFirestore.instance
+            .collection('recipes')
+            .doc(widget.docId)
+            .get();
 
     if (!docSnapshot.exists) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Recipe data not found.")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Recipe data not found.")));
       return;
     }
 
@@ -59,10 +70,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => RecipeCreationScreen(
-          recipeData: data!,
-          docId: widget.docId,
-        ),
+        builder:
+            (_) => RecipeCreationScreen(recipeData: data!, docId: widget.docId),
       ),
     );
   }
@@ -70,7 +79,9 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   @override
   Widget build(BuildContext context) {
     final recipe = widget.recipe;
-    final ingredients = List<Map<String, dynamic>>.from(recipe['ingredients'] ?? []);
+    final ingredients = List<Map<String, dynamic>>.from(
+      recipe['ingredients'] ?? [],
+    );
     final steps = List<String>.from(recipe['steps'] ?? []);
     final spiciness = recipe['spiciness'] ?? 1;
     final difficulty = recipe['difficulty'] ?? 1;
@@ -78,7 +89,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8F5),
       appBar: AppBar(
-        title: const Text('Recipe Detail', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Recipe Detail',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: const Color(0xFF8B0000),
         centerTitle: true,
         foregroundColor: Colors.white,
@@ -93,19 +107,20 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     bottomLeft: Radius.circular(12),
                     bottomRight: Radius.circular(12),
                   ),
-                  child: recipe['imageUrl']?.toString().startsWith('http') == true
-                      ? Image.network(
-                          recipe['imageUrl'],
-                          width: double.infinity,
-                          height: 250,
-                          fit: BoxFit.cover,
-                        )
-                      : Image.asset(
-                          recipe['imageUrl'] ?? 'assets/placeholder.jpg',
-                          width: double.infinity,
-                          height: 250,
-                          fit: BoxFit.cover,
-                        ),
+                  child:
+                      recipe['imageUrl']?.toString().startsWith('http') == true
+                          ? Image.network(
+                            recipe['imageUrl'],
+                            width: double.infinity,
+                            height: 250,
+                            fit: BoxFit.cover,
+                          )
+                          : Image.asset(
+                            recipe['imageUrl'] ?? 'assets/placeholder.jpg',
+                            width: double.infinity,
+                            height: 250,
+                            fit: BoxFit.cover,
+                          ),
                 ),
                 Positioned(
                   top: 16,
@@ -115,7 +130,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                       CircleAvatar(
                         backgroundColor: Colors.white,
                         child: IconButton(
-                          icon: const Icon(Icons.edit, color: Color(0xFF8B0000)),
+                          icon: const Icon(
+                            Icons.edit,
+                            color: Color(0xFF8B0000),
+                          ),
                           onPressed: _onEdit,
                         ),
                       ),
@@ -123,7 +141,10 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                       CircleAvatar(
                         backgroundColor: Colors.white,
                         child: IconButton(
-                          icon: const Icon(Icons.delete, color: Color(0xFF8B0000)),
+                          icon: const Icon(
+                            Icons.delete,
+                            color: Color(0xFF8B0000),
+                          ),
                           onPressed: _onDelete,
                         ),
                       ),
@@ -133,12 +154,20 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               ],
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 12,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(recipe['title'] ?? '',
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  Text(
+                    recipe['title'] ?? '',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
@@ -156,28 +185,41 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  const Text('Spiciness', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Spiciness',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 6),
                   Row(
                     children: List.generate(
                       spiciness,
-                      (index) => const Icon(Icons.whatshot, color: Colors.redAccent),
+                      (index) =>
+                          const Icon(Icons.whatshot, color: Colors.redAccent),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text('Ingredients', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Ingredients',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
-                  ...ingredients.map((item) => Text(
-                      '- ${item['amount']} ${item['unit']} ${item['name']}')),
+                  ...ingredients.map(
+                    (item) => Text(
+                      '- ${item['amount']} ${item['unit']} ${item['name']}',
+                    ),
+                  ),
                   const SizedBox(height: 20),
-                  const Text('Steps', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Steps',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
                   ...steps.asMap().entries.map(
-                        (entry) => Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: Text('${entry.key + 1}. ${entry.value}'),
-                        ),
-                      ),
+                    (entry) => Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text('${entry.key + 1}. ${entry.value}'),
+                    ),
+                  ),
                 ],
               ),
             ),

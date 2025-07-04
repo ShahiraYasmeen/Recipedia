@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -21,7 +20,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
     'Main Course',
     'Dessert',
     'Beverages',
-    'Snacks'
+    'Snacks',
   ];
   final List<String> categoryCode = ['App', 'MC', 'Dess', 'Bev', 'Sna'];
   final List<List<String>> foodNames = [
@@ -47,11 +46,12 @@ class _HomepageScreenState extends State<HomepageScreen> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return [];
 
-    final snapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .collection('saved_recipes')
-        .get();
+    final snapshot =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .collection('saved_recipes')
+            .get();
 
     return snapshot.docs.map((doc) {
       final data = doc.data();
@@ -101,11 +101,12 @@ class _HomepageScreenState extends State<HomepageScreen> {
   }
 
   Future<void> _loadSaved() async {
-    final snap = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .collection('saved_recipes')
-        .get();
+    final snap =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .collection('saved_recipes')
+            .get();
     setState(() {
       savedRecipes = snap.docs.map((doc) => doc.id).toSet();
       savedRecipesData = snap.docs.map((doc) => doc.data()).toList();
@@ -129,34 +130,39 @@ class _HomepageScreenState extends State<HomepageScreen> {
   }
 
   Future<void> _loadFirebaseRecipes() async {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('recipes')
-        .orderBy('createdAt', descending: true)
-        .get();
+    final snapshot =
+        await FirebaseFirestore.instance
+            .collection('recipes')
+            .orderBy('createdAt', descending: true)
+            .get();
 
     setState(() {
-      firebaseRecipes = snapshot.docs.map((doc) {
-        final data = doc.data();
-        return {
-          'id': doc.id,
-          'title': data['title'] ?? '',
-          'imageUrl': data['imageUrl'] ?? '',
-          'cat': data['category'] ?? '',
-          'index': data['index'] ?? 0,
-          'ingredients': data['ingredients'] ?? [],
-          'steps': data['steps'] ?? [],
-          'isPrivate': data['isPrivate'] ?? true,
-          'createdAt': data['createdAt'],
-        };
-      }).toList();
+      firebaseRecipes =
+          snapshot.docs.map((doc) {
+            final data = doc.data();
+            return {
+              'id': doc.id,
+              'title': data['title'] ?? '',
+              'imageUrl': data['imageUrl'] ?? '',
+              'cat': data['category'] ?? '',
+              'index': data['index'] ?? 0,
+              'ingredients': data['ingredients'] ?? [],
+              'steps': data['steps'] ?? [],
+              'isPrivate': data['isPrivate'] ?? true,
+              'createdAt': data['createdAt'],
+            };
+          }).toList();
     });
   }
 
   List<Map<String, dynamic>> _getFilteredRecipes() {
-    List<Map<String, dynamic>> result = [];
+    final List<Map<String, dynamic>> result = [];
+    final Set<String> addedIds = {};
 
     if (selectedCategory == 'Saved') {
-      result.addAll(savedCommunityRecipes);
+      for (final r in savedCommunityRecipes) {
+        if (addedIds.add(r['id'])) result.add(r);
+      }
     }
 
     for (int cat = 0; cat < foodNames.length; cat++) {
@@ -165,29 +171,33 @@ class _HomepageScreenState extends State<HomepageScreen> {
         final title = foodNames[cat][i];
         final image = 'assets/${categoryCode[cat]}$i.jpg';
 
-        final item = {'id': id, 'cat': cat, 'index': i, 'title': title, 'image': image};
+        final item = {
+          'id': id,
+          'cat': cat,
+          'index': i,
+          'title': title,
+          'image': image,
+        };
 
         if (selectedCategory == 'Saved' && savedRecipes.contains(id)) {
-          result.add(item);
-        } else if (selectedCategory == 'All' || selectedCategory == categories[cat + 2]) {
-          result.add(item);
+          if (addedIds.add(id)) result.add(item);
+        } else if (selectedCategory == 'All' ||
+            selectedCategory == categories[cat + 2]) {
+          if (addedIds.add(id)) result.add(item);
         }
       }
     }
 
     for (final recipe in firebaseRecipes) {
-      // ignore: unused_local_variable
       final isPrivate = recipe['isPrivate'] == true;
       final isSaved = savedRecipes.contains(recipe['id']);
 
-      if (selectedCategory == 'Saved') {
-        if (isSaved) {
-          result.add(recipe);
-        }
-      } else {
-        if (selectedCategory == 'All' || recipe['cat'] == selectedCategory) {
-          result.add(recipe);
-        }
+      if (selectedCategory == 'Saved' && isSaved) {
+        if (addedIds.add(recipe['id'])) result.add(recipe);
+      } else if (selectedCategory == 'All') {
+        if (addedIds.add(recipe['id'])) result.add(recipe);
+      } else if (!isPrivate && recipe['cat'] == selectedCategory) {
+        if (addedIds.add(recipe['id'])) result.add(recipe);
       }
     }
 
@@ -211,7 +221,10 @@ class _HomepageScreenState extends State<HomepageScreen> {
           const SizedBox(height: 15),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Text("Popular Category", style: TextStyle(fontSize: 20, color: Color(0xFF8B0000))),
+            child: Text(
+              "Popular Category",
+              style: TextStyle(fontSize: 20, color: Color(0xFF8B0000)),
+            ),
           ),
           const SizedBox(height: 5),
           Stack(
@@ -232,17 +245,35 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       child: GestureDetector(
                         onTap: () => setState(() => selectedCategory = cat),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
                           decoration: BoxDecoration(
-                            color: isSelected ? const Color(0xFF8B0000) : Colors.transparent,
+                            color:
+                                isSelected
+                                    ? const Color(0xFF8B0000)
+                                    : Colors.transparent,
                             borderRadius: BorderRadius.circular(20),
-                            boxShadow: isSelected
-                                ? [const BoxShadow(color: Color(0xFF8B0000), blurRadius: 7, offset: Offset(1, 1))]
-                                : [],
+                            boxShadow:
+                                isSelected
+                                    ? [
+                                      const BoxShadow(
+                                        color: Color(0xFF8B0000),
+                                        blurRadius: 7,
+                                        offset: Offset(1, 1),
+                                      ),
+                                    ]
+                                    : [],
                           ),
                           child: Center(
-                            child: Text(cat,
-                                style: TextStyle(fontSize: 16, color: isSelected ? Colors.white : Colors.black)),
+                            child: Text(
+                              cat,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: isSelected ? Colors.white : Colors.black,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -259,8 +290,15 @@ class _HomepageScreenState extends State<HomepageScreen> {
                     duration: const Duration(milliseconds: 500),
                     opacity: _showRightArrow ? 1.0 : 0.0,
                     child: Container(
-                      decoration: const BoxDecoration(color: Colors.white70, shape: BoxShape.circle),
-                      child: const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFF8B0000)),
+                      decoration: const BoxDecoration(
+                        color: Colors.white70,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: Color(0xFF8B0000),
+                      ),
                     ),
                   ),
                 ),
@@ -269,143 +307,193 @@ class _HomepageScreenState extends State<HomepageScreen> {
           const SizedBox(height: 15),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Text('Recipes', style: TextStyle(fontSize: 20, color: Colors.black)),
+            child: Text(
+              'Recipes',
+              style: TextStyle(fontSize: 20, color: Colors.black),
+            ),
           ),
           const SizedBox(height: 10),
           Expanded(
-            child: recipes.isEmpty
-                ? const Center(child: Text('No recipes found.'))
-                : GridView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisExtent: 270,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                    ),
-                    itemCount: recipes.length,
-                    itemBuilder: (context, i) {
-                      final r = recipes[i];
-                      final isSaved = savedRecipes.contains(r['id']);
+            child:
+                recipes.isEmpty
+                    ? const Center(child: Text('No recipes found.'))
+                    : GridView.builder(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 15,
+                        vertical: 20,
+                      ),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisExtent: 270,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                          ),
+                      itemCount: recipes.length,
+                      itemBuilder: (context, i) {
+                        final r = recipes[i];
+                        final isSaved = savedRecipes.contains(r['id']);
 
-                      final imageWidget = r['imageUrl'] != null && r['imageUrl'] != ''
-                          ? Image.network(r['imageUrl'], fit: BoxFit.cover)
-                          : Image.asset(r['image'] ?? 'assets/placeholder.jpg', fit: BoxFit.cover);
+                        final imageWidget =
+                            r['imageUrl'] != null && r['imageUrl'] != ''
+                                ? Image.network(
+                                  r['imageUrl'],
+                                  fit: BoxFit.cover,
+                                )
+                                : Image.asset(
+                                  r['image'] ?? 'assets/placeholder.jpg',
+                                  fit: BoxFit.cover,
+                                );
 
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: const [BoxShadow(color: Colors.grey, blurRadius: 15, offset: Offset(1, 1))],
-                        ),
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 10),
-                            Align(
-                              alignment: Alignment.topRight,
-                              child: IconButton(
-                                onPressed: () => _toggleSave(r['id'], {
-                                  'title': r['title'],
-                                  'cat': r['cat'],
-                                  'index': r['index'],
-                                }),
-                                icon: AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 300),
-                                  transitionBuilder: (child, anim) =>
-                                      ScaleTransition(scale: anim, child: child),
-                                  child: Icon(
-                                    isSaved ? Icons.bookmark : Icons.bookmark_border,
-                                    key: ValueKey<bool>(isSaved),
-                                    color: isSaved ? const Color(0xFF8B0000) : Colors.black,
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.grey,
+                                blurRadius: 15,
+                                offset: Offset(1, 1),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 10),
+                              Align(
+                                alignment: Alignment.topRight,
+                                child: IconButton(
+                                  onPressed:
+                                      () => _toggleSave(r['id'], {
+                                        'title': r['title'],
+                                        'cat': r['cat'],
+                                        'index': r['index'],
+                                      }),
+                                  icon: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 300),
+                                    transitionBuilder:
+                                        (child, anim) => ScaleTransition(
+                                          scale: anim,
+                                          child: child,
+                                        ),
+                                    child: Icon(
+                                      isSaved
+                                          ? Icons.bookmark
+                                          : Icons.bookmark_border,
+                                      key: ValueKey<bool>(isSaved),
+                                      color:
+                                          isSaved
+                                              ? const Color(0xFF8B0000)
+                                              : Colors.black,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            GestureDetector(
-                              onTap: () async {
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => RecipeDetailPage(
-                                      recipe: r,
-                                      docId: r['id'],
-                                    ),
-                                  ),
-                                );
-
-                                if (result == 'refresh') {
-                                  _loadFirebaseRecipes();
-                                  _loadSaved();
-                                  _loadSavedCommunity();
-                                }
-                                final isStatic = r['image'] != null;
-                                final isCommunitySaved = r['cat'] == 'Saved' && r['image'] != null && r['imageUrl'] == null;
-
-                                List<String> ingredients = [];
-                                List<String> steps = [];
-
-                                if (isStatic) {
-                                  final data = staticRecipeData[r['title']];
-                                  ingredients = List<String>.from(data?['ingredients'] ?? []);
-                                  steps = List<String>.from(data?['steps'] ?? []);
-                                } else {
-                                  ingredients = List<String>.from(r['ingredients'] ?? []);
-                                  steps = List<String>.from(r['steps'] ?? []);
-                                }
-
-                                if (isCommunitySaved) {
-                                  Navigator.push(
+                              GestureDetector(
+                                onTap: () async {
+                                  final result = await Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => CommunityRecipeDetailPage(
-                                        recipe: r,
-                                        ingredients: ingredients,
-                                        steps: steps,
-                                      ),
+                                      builder:
+                                          (_) => RecipeDetailPage(
+                                            recipe: r,
+                                            docId: r['id'],
+                                          ),
                                     ),
                                   );
-                                } else {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => RecipeDetailPage(
-                                        recipe: r,
-                                        docId: r['id'],
+
+                                  if (result == 'refresh') {
+                                    _loadFirebaseRecipes();
+                                    _loadSaved();
+                                    _loadSavedCommunity();
+                                  }
+                                  final isStatic = r['image'] != null;
+                                  final isCommunitySaved =
+                                      r['cat'] == 'Saved' &&
+                                      r['image'] != null &&
+                                      r['imageUrl'] == null;
+
+                                  List<String> ingredients = [];
+                                  List<String> steps = [];
+
+                                  if (isStatic) {
+                                    final data = staticRecipeData[r['title']];
+                                    ingredients = List<String>.from(
+                                      data?['ingredients'] ?? [],
+                                    );
+                                    steps = List<String>.from(
+                                      data?['steps'] ?? [],
+                                    );
+                                  } else {
+                                    ingredients = List<String>.from(
+                                      r['ingredients'] ?? [],
+                                    );
+                                    steps = List<String>.from(r['steps'] ?? []);
+                                  }
+
+                                  if (isCommunitySaved) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (_) => CommunityRecipeDetailPage(
+                                              recipe: r,
+                                              ingredients: ingredients,
+                                              steps: steps,
+                                            ),
                                       ),
-                                    ),
-                                  );
-                                }
-                              },
-                              child: Column(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                    child: Container(
-                                      height: 120,
-                                      width: 129,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(20),
-                                        image: DecorationImage(
-                                          image: imageWidget.image,
-                                          fit: BoxFit.cover,
+                                    );
+                                  } else {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (_) => RecipeDetailPage(
+                                              recipe: r,
+                                              docId: r['id'],
+                                            ),
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: Column(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 10,
+                                      ),
+                                      child: Container(
+                                        height: 120,
+                                        width: 129,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                          image: DecorationImage(
+                                            image: imageWidget.image,
+                                            fit: BoxFit.cover,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    r['title'] ?? '',
-                                    style: const TextStyle(fontSize: 18, color: Colors.black),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      r['title'] ?? '',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.black,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
           ),
         ],
       ),
