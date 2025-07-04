@@ -23,15 +23,37 @@ class CommunityRecipeDetailPage extends StatefulWidget {
 class _CommunityRecipeDetailPageState
     extends State<CommunityRecipeDetailPage> {
   bool isSaved = false;
+  String? userId;
+
+  @override
+  void initState() {
+    super.initState();
+    userId = FirebaseAuth.instance.currentUser?.uid;
+    _checkIfSaved();
+  }
+
+  Future<void> _checkIfSaved() async {
+    if (userId != null) {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('saved_recipes')
+          .doc(widget.recipe['title'])
+          .get();
+      setState(() {
+        isSaved = doc.exists;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final recipe = widget.recipe;
-    final ingredients = widget.ingredients;
-    final steps = widget.steps;
+    final List<String> ingredients = List<String>.from(recipe['ingredients'] ?? []);
+    final List<String> steps = List<String>.from(recipe['steps'] ?? []) ;
+
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8F5),
       appBar: AppBar(
         title: const Text(
           'Recipe Detail',
@@ -76,34 +98,39 @@ class _CommunityRecipeDetailPageState
                             color: const Color(0xFF8B0000),
                           ),
                           onPressed: () async {
-  final userId = FirebaseAuth.instance.currentUser?.uid;
-  final docRef = FirebaseFirestore.instance
-      .collection('users')
-      .doc(userId)
-      .collection('saved_recipes')
-      .doc(widget.recipe['title']);
+                            final uid = FirebaseAuth.instance.currentUser?.uid;
+                            final docRef = FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(uid)
+                                .collection('saved_recipes')
+                                .doc(widget.recipe['title']); // unique id
 
-  if (!isSaved) {
-    // Save the recipe
-    await docRef.set(widget.recipe); // Save full recipe map
-  } else {
-    // Unsave
-    await docRef.delete();
-  }
+                            final doc = await docRef.get();
 
-  setState(() {
-    isSaved = !isSaved;
-  });
-
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(isSaved ? 'Recipe saved' : 'Recipe unsaved'),
-      backgroundColor: const Color(0xFF8B0000),
-      duration: const Duration(seconds: 2),
-    ),
-  );
-}
-,
+                            if (doc.exists) {
+                              await docRef.delete();
+                              setState(() => isSaved = false);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Recipe unsaved'), duration: Duration(seconds: 2)),
+                              );
+                            } else {
+                              await docRef.set({
+                                'title': widget.recipe['title'],
+                                'image': widget.recipe['image'],
+                                'author': widget.recipe['author'],
+                                'duration': widget.recipe['duration'],
+                                'difficulty': widget.recipe['difficulty'],
+                                'servings': widget.recipe['servings'],
+                                'ingredients': List<String>.from(widget.recipe['ingredients'] ?? []),
+                                'steps': List<String>.from(widget.recipe['steps'] ?? []),
+                                'category': widget.recipe['category'] ?? 'Main Course',
+                              });
+                              setState(() => isSaved = true);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Recipe saved'), duration: Duration(seconds: 2)),
+                              );
+                            }
+                          },
                         ),
                       ),
                     ],

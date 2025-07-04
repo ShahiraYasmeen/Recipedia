@@ -3,16 +3,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'recipe_detail_page.dart';
 import 'recipe_data.dart'; // Assuming you have a file with static recipe data
+import 'community_recipe_detail_page.dart';
 
 class HomepageScreen extends StatefulWidget {
   const HomepageScreen({super.key});
 
   @override
   State<HomepageScreen> createState() => _HomepageScreenState();
-  void didChangeDependencies() {
-  super.didChangeDependencies();
-  _loadSaved(); // Refresh saved recipes when returning to this page
-}
 }
 
 class _HomepageScreenState extends State<HomepageScreen> {
@@ -42,25 +39,64 @@ class _HomepageScreenState extends State<HomepageScreen> {
   bool _showRightArrow = true;
 
   List<Map<String, dynamic>> firebaseRecipes = [];
+  List<Map<String, dynamic>> savedRecipesData = [];
+  List<Map<String, dynamic>> savedCommunityRecipes = [];
+
+  Future<List<Map<String, dynamic>>> fetchSavedCommunityRecipes() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return [];
+
+    final snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('saved_recipes')
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return {
+        'id': doc.id,
+        'title': data['title'],
+        'image': data['image'], // Assuming it's saved as 'image'
+        'cat': 'Saved',
+        'ingredients': data['ingredients'] ?? [],
+        'steps': data['steps'] ?? [],
+      };
+    }).toList();
+  }
+@override
+void initState() {
+  super.initState();
+  final user = FirebaseAuth.instance.currentUser;
+  uid = user?.uid ?? '';
+  _loadSaved();
+  _loadFirebaseRecipes();
+  _loadSavedCommunity();
+
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    _scrollController.animateTo(
+      30,
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.easeInOut,
+    );
+    Future.delayed(const Duration(seconds: 3), () {
+      setState(() => _showRightArrow = false);
+    });
+  });
+}
+
+// Remove duplicate _loadSavedCommunity method
+void _loadSavedCommunity() async {
+  final saved = await fetchSavedCommunityRecipes();
+  setState(() {
+    savedCommunityRecipes = saved;
+  });
+}
 
   @override
-  void initState() {
-    super.initState();
-    final user = FirebaseAuth.instance.currentUser;
-    uid = user?.uid ?? '';
-    _loadSaved();
-    _loadFirebaseRecipes();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollController.animateTo(
-        30,
-        duration: const Duration(milliseconds: 800),
-        curve: Curves.easeInOut,
-      );
-      Future.delayed(const Duration(seconds: 3), () {
-        setState(() => _showRightArrow = false);
-      });
-    });
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadSaved(); // Refresh saved recipes whenever page is revisited
   }
 
   Future<void> _loadSaved() async {
@@ -71,6 +107,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
         .get();
     setState(() {
       savedRecipes = snap.docs.map((doc) => doc.id).toSet();
+      savedRecipesData = snap.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
     });
   }
 
@@ -112,6 +149,11 @@ class _HomepageScreenState extends State<HomepageScreen> {
 
   List<Map<String, dynamic>> _getFilteredRecipes() {
     List<Map<String, dynamic>> result = [];
+
+    // Add saved from Firebase (community saved)
+    if (selectedCategory == 'Saved') {
+      result.addAll(savedCommunityRecipes);
+    }
 
     // Static assets
     for (int cat = 0; cat < foodNames.length; cat++) {
@@ -297,8 +339,11 @@ class _HomepageScreenState extends State<HomepageScreen> {
                             GestureDetector(
                              onTap: () {
                               final isStatic = r['image'] != null; // crude check for static recipe
+                              final isCommunitySaved = r['cat'] == 'Saved' && r['image'] != null && r['imageUrl'] == null;
+                                  
                                   List<String> ingredients = [];
                                   List<String> steps = [];
+
                                   if (isStatic) {
                                     final data = staticRecipeData[r['title']];
                                     ingredients = List<String>.from(data?['ingredients'] ?? []);
@@ -307,6 +352,20 @@ class _HomepageScreenState extends State<HomepageScreen> {
                                     ingredients = List<String>.from(r['ingredients'] ?? []);
                                     steps = List<String>.from(r['steps'] ?? []);
                                   }
+                                  if (isCommunitySaved) {
+                                    // Navigate to community recipe detail page
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => CommunityRecipeDetailPage(
+                                          recipe: r,
+                                          ingredients: ingredients,
+                                          steps: steps,
+                                        ),
+                                      ),
+                                    );
+                                    
+                                  } else {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -319,11 +378,12 @@ class _HomepageScreenState extends State<HomepageScreen> {
                                       ),
                                     ),
                                   );
-                                },
+                                }
+                              },
                               child: Column(
                                 children: [
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                                     child: Container(
                                       height: 120,
                                       width: 129,
@@ -336,10 +396,11 @@ class _HomepageScreenState extends State<HomepageScreen> {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(height: 20),
+                                  const SizedBox(height: 10),
                                   Text(
                                     r['title'] ?? '',
                                     style: const TextStyle(fontSize: 18, color: Colors.black),
+                                    textAlign: TextAlign.center,
                                   ),
                                 ],
                               ),
@@ -352,6 +413,6 @@ class _HomepageScreenState extends State<HomepageScreen> {
           ),
         ],
       ),
-    );
+      );
+    }
   }
-}

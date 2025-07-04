@@ -228,6 +228,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
               itemCount: displayedRecipes.length,
               itemBuilder: (context, index) {
                 final r = displayedRecipes[index];
+
+                if (r['image'] == null || r['image'].toString().isEmpty ||
+                    r['title'] == null || r['title'].toString().isEmpty) {
+                  return const SizedBox.shrink(); // Skip invalid entries
+                }
                 final isLiked = likedRecipes.contains(r['id'] ?? r['title']);
                 final isBase64 = r['image']?.toString().startsWith('data:image') ?? false;
 
@@ -240,7 +245,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
                             recipe: r,
                             ingredients: List<String>.from(r['ingredients'] ?? []),
                             steps: List<String>.from(r['steps'] ?? []),
-                          )),
+                          ),
+                      ),
                     );
                   },
                   child: Container(
@@ -270,7 +276,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                   fit: BoxFit.cover,
                                 )
                               : Image.asset(
-                                  r['image'],
+                                  r['image'] ?? 'assets/default_image.png',
                                   width: 100,
                                   height: 100,
                                   fit: BoxFit.cover,
@@ -281,11 +287,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(r['title'],
+                              Text(r['title'] ?? 'Untitled',
                                   style: const TextStyle(
                                       fontSize: 16, fontWeight: FontWeight.bold)),
                               const SizedBox(height: 4),
-                              Text(r['author'] ?? '-', style: const TextStyle(color: Colors.grey)),
+                              Text(r['author'] ?? 'Unknown', style: const TextStyle(color: Colors.grey)),
                               const SizedBox(height: 4),
                               Text(
                                 '${r['duration']} • ${r['difficulty']} • ${r['servings']} servings',
@@ -334,6 +340,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                       'duration': r['duration'],
                                       'difficulty': r['difficulty'],
                                       'servings': r['servings'],
+                                      'ingredients': List<String>.from(r['ingredients'] ?? []),
+                                      'steps': List<String>.from(r['steps'] ?? []),
                                       'likedAt': FieldValue.serverTimestamp(),
                                     });
                                     if (r['id'] != null) {

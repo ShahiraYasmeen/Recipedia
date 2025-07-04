@@ -59,13 +59,16 @@ class _LikedRecipeScreenState extends State<LikedRecipeScreen> {
               final recipe = likedRecipes[index];
               return GestureDetector(
                 onTap: () {
+                  final ingredients = List<String>.from(recipe['ingredients'] ?? []);
+                  final steps = List<String>.from(recipe['steps'] ?? []);
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => CommunityRecipeDetailPage(
                         recipe: likedRecipes[index],
-                        ingredients: likedRecipes[index]['ingredients'],
-                        steps: likedRecipes[index]['steps'],
+                        ingredients: ingredients,
+                        steps: steps,
                       ),
                     ),
                   );
