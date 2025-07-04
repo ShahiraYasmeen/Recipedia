@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:recipedia/main.dart';
 import 'createrecipe.dart';
 import 'homepage.dart';
+
 
 class RecipeDetailPage extends StatefulWidget {
   final Map<String, dynamic> recipe;
@@ -53,11 +55,11 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
       Navigator.pop(context); // close loader
 
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const HomepageScreen()),
-        (route) => false,
-      );
+    Navigator.pushAndRemoveUntil(
+  context,
+  MaterialPageRoute(builder: (_) => const BottomNavBarExample()),
+  (route) => false,
+);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Recipe deleted successfully')),

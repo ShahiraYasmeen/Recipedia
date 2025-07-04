@@ -24,14 +24,6 @@ class _HomepageScreenState extends State<HomepageScreen> {
     'Beverage',
     'Snacks',
   ];
-  final List<String> categoryCode = ['App', 'MC', 'Dess', 'Bev', 'Sna'];
-  final List<List<String>> foodNames = [
-    ['Salmon Toast', 'Cheese Bites', 'Spring Rolls', 'Mini Quiche'],
-    ['Grilled Chicken', 'Chicken Curry', 'Beef Stew', 'Seafood Pasta'],
-    ['Strawberry Tart', 'Lava Cake', 'Berry Tart', 'Cheesecake'],
-    ['Mojito', 'Lemonade', 'Iced Coffee', 'Smoothie'],
-    ['Nachos', 'Popcorn', 'Chips', 'Nuggets'],
-  ];
 
   String selectedCategory = 'All';
   Set<String> savedRecipes = {};
@@ -170,7 +162,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
       }
     }
 
-    for (int cat = 0; cat < foodNames.length; cat++) {
+    /*for (int cat = 0; cat < foodNames.length; cat++) {
       for (int i = 0; i < foodNames[cat].length; i++) {
         final id = '$cat-$i';
         final title = foodNames[cat][i];
@@ -191,7 +183,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
           if (addedIds.add(id)) result.add(item);
         }
       }
-    }
+    }*/
 
     for (final recipe in firebaseRecipes) {
       final isPrivate = recipe['isPrivate'] == true;

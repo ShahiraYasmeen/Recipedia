@@ -9,6 +9,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 
 import 'homepage.dart';
+import 'package:recipedia/main.dart';
+// TODO: Ensure that BottomNavBarExample is defined in homepage.dart or import the correct file where it is defined.
 
 class RecipeCreationScreen extends StatefulWidget {
   final Map<String, dynamic>? recipeData;
@@ -30,7 +32,7 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
   final durationController = TextEditingController();
 
   bool isPrivate = false;
-  double spiciness = 1;
+  double spiciness = 0;
   double difficulty = 1;
   String category = 'Appetizer';
   String durationUnit = 'mins';
@@ -83,13 +85,14 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
       category = data['category'] ?? category;
       servingsController.text = data['servings'] ?? '';
 
-      final durationParts = (data['duration'] ?? '30 mins').split(' ');
+      final durationStr = data['duration'] ?? '30 mins';
+      final durationParts = durationStr.split(' ');
       if (durationParts.length == 2) {
         durationController.text = durationParts[0];
         durationUnit = durationParts[1];
       }
 
-      spiciness = (data['spiciness'] ?? 1).toDouble();
+      spiciness = (data['spiciness'] ?? 0).toDouble();
       difficulty = (data['difficulty'] ?? 1).toDouble();
       isPrivate = data['isPrivate'] ?? false;
 
@@ -288,11 +291,11 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
 
     // ✅ After upload, navigate accordingly
     if (isPrivate) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const HomepageScreen()),
-        (Route<dynamic> route) => false,
-      );
+    Navigator.pushAndRemoveUntil(
+  context,
+  MaterialPageRoute(builder: (_) => const BottomNavBarExample()),
+  (route) => false,
+);
     } else {
       Navigator.pop(context, 'refresh'); // back to community with signal
     }
@@ -386,9 +389,9 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
           _label('Spiciness'),
           _card(Slider(
               value: spiciness,
-              min: 1,
+              min: 0,
               max: 5,
-              divisions: 4,
+              divisions: 5,
               label: spiciness.round().toString(),
               onChanged: (v) => setState(() => spiciness = v))),
 
@@ -485,12 +488,16 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
           Row(mainAxisAlignment: MainAxisAlignment.end, children: [
             ElevatedButton(
                 onPressed: _uploadRecipe,
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                child: const Text('Upload')),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  textStyle: const TextStyle(color: Colors.white)),
+                  child: const Text('Upload')),
             const SizedBox(width: 10),
             ElevatedButton(
                 onPressed: _showCancelDialog,
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  textStyle: const TextStyle(color: Colors.white)),
                 child: const Text('Cancel')),
           ])
         ]),
