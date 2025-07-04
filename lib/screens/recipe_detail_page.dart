@@ -1,22 +1,15 @@
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'createrecipe.dart';
 
 class RecipeDetailPage extends StatefulWidget {
-  final String title;
-  final String imagePath;
-  final String docId; // ✅ Add docId from HomepageScreen
-  final List<String> ingredients;
-  final List<String> steps;
+  final Map<String, dynamic> recipe;
+  final String docId;
 
   const RecipeDetailPage({
     super.key,
-    required this.title,
-    required this.imagePath,
+    required this.recipe,
     required this.docId,
-    required this.ingredients,
-    required this.steps,
   });
 
   @override
@@ -43,7 +36,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Recipe deleted successfully")),
       );
-      Navigator.pop(context);
+      Navigator.pop(context, 'refresh');
     }
   }
 
@@ -73,15 +66,19 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
       ),
     );
   }
-@override
+
+  @override
   Widget build(BuildContext context) {
+    final recipe = widget.recipe;
+    final ingredients = List<Map<String, dynamic>>.from(recipe['ingredients'] ?? []);
+    final steps = List<String>.from(recipe['steps'] ?? []);
+    final spiciness = recipe['spiciness'] ?? 1;
+    final difficulty = recipe['difficulty'] ?? 1;
+
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8F5),
       appBar: AppBar(
-        title: const Text(
-          'Recipe Detail',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Recipe Detail', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: const Color(0xFF8B0000),
         centerTitle: true,
         foregroundColor: Colors.white,
@@ -96,15 +93,15 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     bottomLeft: Radius.circular(12),
                     bottomRight: Radius.circular(12),
                   ),
-                  child: widget.imagePath.startsWith('http')
+                  child: recipe['imageUrl']?.toString().startsWith('http') == true
                       ? Image.network(
-                          widget.imagePath,
+                          recipe['imageUrl'],
                           width: double.infinity,
                           height: 250,
                           fit: BoxFit.cover,
                         )
                       : Image.asset(
-                          widget.imagePath,
+                          recipe['imageUrl'] ?? 'assets/placeholder.jpg',
                           width: double.infinity,
                           height: 250,
                           fit: BoxFit.cover,
@@ -135,48 +132,47 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                 ),
               ],
             ),
-
-            // Static details
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    widget.title,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 6),
+                  Text(recipe['title'] ?? '',
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   Row(
-                    children: const [
-                      Icon(Icons.access_time, size: 16),
-                      SizedBox(width: 4),
-                      Text('30 mins'),
-                      SizedBox(width: 16),
-                      Icon(Icons.local_fire_department, size: 16),
-                      SizedBox(width: 4),
-                      Text('Easy'),
-                      SizedBox(width: 16),
-                      Icon(Icons.people, size: 16),
-                      SizedBox(width: 4),
-                      Text('2 servings'),
+                    children: [
+                      const Icon(Icons.access_time, size: 16),
+                      const SizedBox(width: 4),
+                      Text(recipe['duration'] ?? ''),
+                      const SizedBox(width: 16),
+                      const Icon(Icons.local_fire_department, size: 16),
+                      const SizedBox(width: 4),
+                      Text(_difficultyLabel(difficulty)),
+                      const SizedBox(width: 16),
+                      const Icon(Icons.people, size: 16),
+                      const SizedBox(width: 4),
+                      Text('${recipe['servings']} servings'),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  const Text(
-                    'Ingredients',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  const Text('Spiciness', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: List.generate(
+                      spiciness,
+                      (index) => const Icon(Icons.whatshot, color: Colors.redAccent),
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  ...widget.ingredients.map((item) => Text('- $item')),
                   const SizedBox(height: 20),
-                  const Text(
-                    'Steps',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  const Text('Ingredients', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  ...widget.steps.asMap().entries.map(
+                  ...ingredients.map((item) => Text(
+                      '- ${item['amount']} ${item['unit']} ${item['name']}')),
+                  const SizedBox(height: 20),
+                  const Text('Steps', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  ...steps.asMap().entries.map(
                         (entry) => Padding(
                           padding: const EdgeInsets.only(bottom: 6),
                           child: Text('${entry.key + 1}. ${entry.value}'),
@@ -190,5 +186,18 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         ),
       ),
     );
+  }
+
+  String _difficultyLabel(int level) {
+    switch (level) {
+      case 1:
+        return 'Easy';
+      case 2:
+        return 'Medium';
+      case 3:
+        return 'Hard';
+      default:
+        return 'Unknown';
+    }
   }
 }

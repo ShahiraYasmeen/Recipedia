@@ -285,7 +285,7 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
         _showSnackBar('Recipe uploaded!', Colors.green);
       }
 
-      Navigator.pop(context);
+     Navigator.pop(context, 'refresh'); // bagi signal ke homepage
     } catch (e) {
       _showSnackBar('Error: $e', Colors.red);
     }

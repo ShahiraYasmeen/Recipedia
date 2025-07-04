@@ -1,8 +1,9 @@
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'recipe_detail_page.dart';
-import 'recipe_data.dart'; // Assuming you have a file with static recipe data
+import 'recipe_data.dart';
 import 'community_recipe_detail_page.dart';
 
 class HomepageScreen extends StatefulWidget {
@@ -57,46 +58,46 @@ class _HomepageScreenState extends State<HomepageScreen> {
       return {
         'id': doc.id,
         'title': data['title'],
-        'image': data['image'], // Assuming it's saved as 'image'
+        'image': data['image'],
         'cat': 'Saved',
         'ingredients': data['ingredients'] ?? [],
         'steps': data['steps'] ?? [],
       };
     }).toList();
   }
-@override
-void initState() {
-  super.initState();
-  final user = FirebaseAuth.instance.currentUser;
-  uid = user?.uid ?? '';
-  _loadSaved();
-  _loadFirebaseRecipes();
-  _loadSavedCommunity();
 
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    _scrollController.animateTo(
-      30,
-      duration: const Duration(milliseconds: 800),
-      curve: Curves.easeInOut,
-    );
-    Future.delayed(const Duration(seconds: 3), () {
-      setState(() => _showRightArrow = false);
+  @override
+  void initState() {
+    super.initState();
+    final user = FirebaseAuth.instance.currentUser;
+    uid = user?.uid ?? '';
+    _loadSaved();
+    _loadFirebaseRecipes();
+    _loadSavedCommunity();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollController.animateTo(
+        30,
+        duration: const Duration(milliseconds: 800),
+        curve: Curves.easeInOut,
+      );
+      Future.delayed(const Duration(seconds: 3), () {
+        setState(() => _showRightArrow = false);
+      });
     });
-  });
-}
+  }
 
-// Remove duplicate _loadSavedCommunity method
-void _loadSavedCommunity() async {
-  final saved = await fetchSavedCommunityRecipes();
-  setState(() {
-    savedCommunityRecipes = saved;
-  });
-}
+  void _loadSavedCommunity() async {
+    final saved = await fetchSavedCommunityRecipes();
+    setState(() {
+      savedCommunityRecipes = saved;
+    });
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loadSaved(); // Refresh saved recipes whenever page is revisited
+    _loadSaved();
   }
 
   Future<void> _loadSaved() async {
@@ -130,7 +131,7 @@ void _loadSavedCommunity() async {
   Future<void> _loadFirebaseRecipes() async {
     final snapshot = await FirebaseFirestore.instance
         .collection('recipes')
-        .where('isPrivate', isEqualTo: true)
+        .orderBy('createdAt', descending: true)
         .get();
 
     setState(() {
@@ -142,6 +143,10 @@ void _loadSavedCommunity() async {
           'imageUrl': data['imageUrl'] ?? '',
           'cat': data['category'] ?? '',
           'index': data['index'] ?? 0,
+          'ingredients': data['ingredients'] ?? [],
+          'steps': data['steps'] ?? [],
+          'isPrivate': data['isPrivate'] ?? true,
+          'createdAt': data['createdAt'],
         };
       }).toList();
     });
@@ -150,12 +155,10 @@ void _loadSavedCommunity() async {
   List<Map<String, dynamic>> _getFilteredRecipes() {
     List<Map<String, dynamic>> result = [];
 
-    // Add saved from Firebase (community saved)
     if (selectedCategory == 'Saved') {
       result.addAll(savedCommunityRecipes);
     }
 
-    // Static assets
     for (int cat = 0; cat < foodNames.length; cat++) {
       for (int i = 0; i < foodNames[cat].length; i++) {
         final id = '$cat-$i';
@@ -172,12 +175,19 @@ void _loadSavedCommunity() async {
       }
     }
 
-    // Firebase Cloudinary recipes
     for (final recipe in firebaseRecipes) {
-      if (selectedCategory == 'All' || selectedCategory == 'Saved') {
-        result.add(recipe);
-      } else if (recipe['cat'] == selectedCategory) {
-        result.add(recipe);
+      // ignore: unused_local_variable
+      final isPrivate = recipe['isPrivate'] == true;
+      final isSaved = savedRecipes.contains(recipe['id']);
+
+      if (selectedCategory == 'Saved') {
+        if (isSaved) {
+          result.add(recipe);
+        }
+      } else {
+        if (selectedCategory == 'All' || recipe['cat'] == selectedCategory) {
+          result.add(recipe);
+        }
       }
     }
 
@@ -201,13 +211,7 @@ void _loadSavedCommunity() async {
           const SizedBox(height: 15),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              "Popular Category",
-              style: TextStyle(
-                fontSize: 20,
-                color: Color(0xFF8B0000),
-              ),
-            ),
+            child: Text("Popular Category", style: TextStyle(fontSize: 20, color: Color(0xFF8B0000))),
           ),
           const SizedBox(height: 5),
           Stack(
@@ -233,23 +237,12 @@ void _loadSavedCommunity() async {
                             color: isSelected ? const Color(0xFF8B0000) : Colors.transparent,
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: isSelected
-                                ? [
-                                    const BoxShadow(
-                                      color: Color(0xFF8B0000),
-                                      blurRadius: 7,
-                                      offset: Offset(1, 1),
-                                    ),
-                                  ]
+                                ? [const BoxShadow(color: Color(0xFF8B0000), blurRadius: 7, offset: Offset(1, 1))]
                                 : [],
                           ),
                           child: Center(
-                            child: Text(
-                              cat,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: isSelected ? Colors.white : Colors.black,
-                              ),
-                            ),
+                            child: Text(cat,
+                                style: TextStyle(fontSize: 16, color: isSelected ? Colors.white : Colors.black)),
                           ),
                         ),
                       ),
@@ -266,10 +259,7 @@ void _loadSavedCommunity() async {
                     duration: const Duration(milliseconds: 500),
                     opacity: _showRightArrow ? 1.0 : 0.0,
                     child: Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.white70,
-                        shape: BoxShape.circle,
-                      ),
+                      decoration: const BoxDecoration(color: Colors.white70, shape: BoxShape.circle),
                       child: const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFF8B0000)),
                     ),
                   ),
@@ -279,10 +269,7 @@ void _loadSavedCommunity() async {
           const SizedBox(height: 15),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              'Recipes',
-              style: TextStyle(fontSize: 20, color: Colors.black),
-            ),
+            child: Text('Recipes', style: TextStyle(fontSize: 20, color: Colors.black)),
           ),
           const SizedBox(height: 10),
           Expanded(
@@ -309,9 +296,7 @@ void _loadSavedCommunity() async {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
-                          boxShadow: const [
-                            BoxShadow(color: Colors.grey, blurRadius: 15, offset: Offset(1, 1)),
-                          ],
+                          boxShadow: const [BoxShadow(color: Colors.grey, blurRadius: 15, offset: Offset(1, 1))],
                         ),
                         child: Column(
                           children: [
@@ -337,44 +322,55 @@ void _loadSavedCommunity() async {
                               ),
                             ),
                             GestureDetector(
-                             onTap: () {
-                              final isStatic = r['image'] != null; // crude check for static recipe
-                              final isCommunitySaved = r['cat'] == 'Saved' && r['image'] != null && r['imageUrl'] == null;
-                                  
-                                  List<String> ingredients = [];
-                                  List<String> steps = [];
+                              onTap: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => RecipeDetailPage(
+                                      recipe: r,
+                                      docId: r['id'],
+                                    ),
+                                  ),
+                                );
 
-                                  if (isStatic) {
-                                    final data = staticRecipeData[r['title']];
-                                    ingredients = List<String>.from(data?['ingredients'] ?? []);
-                                    steps = List<String>.from(data?['steps'] ?? []);
-                                  } else {
-                                    ingredients = List<String>.from(r['ingredients'] ?? []);
-                                    steps = List<String>.from(r['steps'] ?? []);
-                                  }
-                                  if (isCommunitySaved) {
-                                    // Navigate to community recipe detail page
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => CommunityRecipeDetailPage(
-                                          recipe: r,
-                                          ingredients: ingredients,
-                                          steps: steps,
-                                        ),
+                                if (result == 'refresh') {
+                                  _loadFirebaseRecipes();
+                                  _loadSaved();
+                                  _loadSavedCommunity();
+                                }
+                                final isStatic = r['image'] != null;
+                                final isCommunitySaved = r['cat'] == 'Saved' && r['image'] != null && r['imageUrl'] == null;
+
+                                List<String> ingredients = [];
+                                List<String> steps = [];
+
+                                if (isStatic) {
+                                  final data = staticRecipeData[r['title']];
+                                  ingredients = List<String>.from(data?['ingredients'] ?? []);
+                                  steps = List<String>.from(data?['steps'] ?? []);
+                                } else {
+                                  ingredients = List<String>.from(r['ingredients'] ?? []);
+                                  steps = List<String>.from(r['steps'] ?? []);
+                                }
+
+                                if (isCommunitySaved) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => CommunityRecipeDetailPage(
+                                        recipe: r,
+                                        ingredients: ingredients,
+                                        steps: steps,
                                       ),
-                                    );
-                                    
-                                  } else {
+                                    ),
+                                  );
+                                } else {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (_) => RecipeDetailPage(
-                                        title: r['title'],
-                                        imagePath: r['imageUrl'] ?? r['image'] ?? '',
+                                        recipe: r,
                                         docId: r['id'],
-                                        ingredients: ingredients,
-                                        steps: steps,
                                       ),
                                     ),
                                   );
@@ -413,6 +409,6 @@ void _loadSavedCommunity() async {
           ),
         ],
       ),
-      );
-    }
+    );
   }
+}
