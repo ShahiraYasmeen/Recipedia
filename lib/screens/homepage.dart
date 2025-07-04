@@ -9,6 +9,10 @@ class HomepageScreen extends StatefulWidget {
 
   @override
   State<HomepageScreen> createState() => _HomepageScreenState();
+  void didChangeDependencies() {
+  super.didChangeDependencies();
+  _loadSaved(); // Refresh saved recipes when returning to this page
+}
 }
 
 class _HomepageScreenState extends State<HomepageScreen> {
