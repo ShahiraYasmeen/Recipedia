@@ -1,3 +1,5 @@
+// ignore_for_file: unused_local_variable
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -19,7 +21,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
     'Appetizer',
     'Main Course',
     'Dessert',
-    'Beverages',
+    'Beverage',
     'Snacks',
   ];
   final List<String> categoryCode = ['App', 'MC', 'Dess', 'Bev', 'Sna'];
@@ -145,6 +147,9 @@ class _HomepageScreenState extends State<HomepageScreen> {
               'title': data['title'] ?? '',
               'imageUrl': data['imageUrl'] ?? '',
               'cat': data['category'] ?? '',
+              'userId': data['userId'] ?? '',
+              'image': data['image'] ?? '',
+              'servings': data['servings'] ?? '',
               'index': data['index'] ?? 0,
               'ingredients': data['ingredients'] ?? [],
               'steps': data['steps'] ?? [],
@@ -196,7 +201,10 @@ class _HomepageScreenState extends State<HomepageScreen> {
         if (addedIds.add(recipe['id'])) result.add(recipe);
       } else if (selectedCategory == 'All') {
         if (addedIds.add(recipe['id'])) result.add(recipe);
-      } else if (!isPrivate && recipe['cat'] == selectedCategory) {
+      } else if (
+          selectedCategory == recipe['cat'] &&
+          (recipe['isPrivate'] == false || recipe['userId'] == uid)
+      ) {
         if (addedIds.add(recipe['id'])) result.add(recipe);
       }
     }

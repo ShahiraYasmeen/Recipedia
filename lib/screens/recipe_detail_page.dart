@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'createrecipe.dart';
+import 'homepage.dart';
 
 class RecipeDetailPage extends StatefulWidget {
   final Map<String, dynamic> recipe;
@@ -17,61 +18,79 @@ class RecipeDetailPage extends StatefulWidget {
 }
 
 class _RecipeDetailPageState extends State<RecipeDetailPage> {
-  void _onDelete() async {
-    final confirm = await showDialog<bool>(
+  Future<void> _onDelete() async {
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Confirm Delete'),
-            content: const Text('Are you sure to delete the recipe?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Delete'),
-              ),
-            ],
-          ),
+      builder: (_) => AlertDialog(
+        title: const Text('Confirm Delete'),
+        content: const Text('Are you sure you want to delete this recipe?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Delete', style: TextStyle(color: Colors.red))),
+        ],
+      ),
     );
 
-    if (confirm == true) {
+    if (confirmed != true) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
       await FirebaseFirestore.instance
           .collection('recipes')
           .doc(widget.docId)
           .delete();
+
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Recipe deleted successfully")),
+
+      Navigator.pop(context); // close loader
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const HomepageScreen()),
+        (route) => false,
       );
-      Navigator.pop(context, 'refresh');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Recipe deleted successfully')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context); // close loader
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Delete failed: $e')),
+      );
     }
   }
 
-  void _onEdit() async {
-    final docSnapshot =
-        await FirebaseFirestore.instance
-            .collection('recipes')
-            .doc(widget.docId)
-            .get();
+  Future<void> _onEdit() async {
+    final doc = await FirebaseFirestore.instance
+        .collection('recipes')
+        .doc(widget.docId)
+        .get();
 
-    if (!docSnapshot.exists) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Recipe data not found.")));
+    if (!doc.exists) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Recipe data not found.')),
+      );
       return;
     }
-
-    final data = docSnapshot.data();
 
     if (!mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder:
-            (_) => RecipeCreationScreen(recipeData: data!, docId: widget.docId),
+        builder: (_) =>
+            RecipeCreationScreen(recipeData: doc.data()!, docId: widget.docId),
       ),
     );
   }
@@ -79,20 +98,20 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   @override
   Widget build(BuildContext context) {
     final recipe = widget.recipe;
-    final ingredients = List<Map<String, dynamic>>.from(
-      recipe['ingredients'] ?? [],
-    );
+    final ingredients =
+        List<Map<String, dynamic>>.from(recipe['ingredients'] ?? []);
     final steps = List<String>.from(recipe['steps'] ?? []);
     final spiciness = recipe['spiciness'] ?? 1;
     final difficulty = recipe['difficulty'] ?? 1;
 
+    final duration = (recipe['duration'] ?? '').toString().trim();
+    final servings = recipe['servings'] ?? '';
+
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8F5),
       appBar: AppBar(
-        title: const Text(
-          'Recipe Detail',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Recipe Detail',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: const Color(0xFF8B0000),
         centerTitle: true,
         foregroundColor: Colors.white,
@@ -107,20 +126,17 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     bottomLeft: Radius.circular(12),
                     bottomRight: Radius.circular(12),
                   ),
-                  child:
-                      recipe['imageUrl']?.toString().startsWith('http') == true
-                          ? Image.network(
-                            recipe['imageUrl'],
-                            width: double.infinity,
-                            height: 250,
-                            fit: BoxFit.cover,
-                          )
-                          : Image.asset(
-                            recipe['imageUrl'] ?? 'assets/placeholder.jpg',
-                            width: double.infinity,
-                            height: 250,
-                            fit: BoxFit.cover,
-                          ),
+                  child: recipe['imageUrl']?.toString().startsWith('http') == true
+                      ? Image.network(recipe['imageUrl'],
+                          width: double.infinity,
+                          height: 250,
+                          fit: BoxFit.cover)
+                      : Image.asset(
+                          recipe['imageUrl'] ?? 'assets/placeholder.jpg',
+                          width: double.infinity,
+                          height: 250,
+                          fit: BoxFit.cover,
+                        ),
                 ),
                 Positioned(
                   top: 16,
@@ -130,10 +146,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                       CircleAvatar(
                         backgroundColor: Colors.white,
                         child: IconButton(
-                          icon: const Icon(
-                            Icons.edit,
-                            color: Color(0xFF8B0000),
-                          ),
+                          icon: const Icon(Icons.edit, color: Color(0xFF8B0000)),
                           onPressed: _onEdit,
                         ),
                       ),
@@ -141,10 +154,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                       CircleAvatar(
                         backgroundColor: Colors.white,
                         child: IconButton(
-                          icon: const Icon(
-                            Icons.delete,
-                            color: Color(0xFF8B0000),
-                          ),
+                          icon:
+                              const Icon(Icons.delete, color: Color(0xFF8B0000)),
                           onPressed: _onDelete,
                         ),
                       ),
@@ -154,26 +165,19 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               ],
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    recipe['title'] ?? '',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text(recipe['title'] ?? '',
+                      style: const TextStyle(
+                          fontSize: 22, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   Row(
                     children: [
                       const Icon(Icons.access_time, size: 16),
                       const SizedBox(width: 4),
-                      Text(recipe['duration'] ?? ''),
+                      Text(duration),
                       const SizedBox(width: 16),
                       const Icon(Icons.local_fire_department, size: 16),
                       const SizedBox(width: 4),
@@ -181,45 +185,36 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                       const SizedBox(width: 16),
                       const Icon(Icons.people, size: 16),
                       const SizedBox(width: 4),
-                      Text('${recipe['servings']} servings'),
+                      Text('$servings servings'),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  const Text(
-                    'Spiciness',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  const Text('Spiciness',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 6),
                   Row(
                     children: List.generate(
                       spiciness,
-                      (index) =>
-                          const Icon(Icons.whatshot, color: Colors.redAccent),
+                      (_) => const Icon(Icons.whatshot, color: Colors.redAccent),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text(
-                    'Ingredients',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  const Text('Ingredients',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  ...ingredients.map(
-                    (item) => Text(
-                      '- ${item['amount']} ${item['unit']} ${item['name']}',
-                    ),
-                  ),
+                  ...ingredients.map((i) => Text(
+                      '- ${i['amount']} ${i['unit']} ${i['name']}')),
                   const SizedBox(height: 20),
-                  const Text(
-                    'Steps',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  const Text('Steps',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  ...steps.asMap().entries.map(
-                    (entry) => Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Text('${entry.key + 1}. ${entry.value}'),
-                    ),
-                  ),
+                  ...steps.asMap().entries.map((e) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Text('${e.key + 1}. ${e.value}'),
+                      )),
                 ],
               ),
             ),
@@ -230,16 +225,6 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     );
   }
 
-  String _difficultyLabel(int level) {
-    switch (level) {
-      case 1:
-        return 'Easy';
-      case 2:
-        return 'Medium';
-      case 3:
-        return 'Hard';
-      default:
-        return 'Unknown';
-    }
-  }
+  String _difficultyLabel(int lvl) =>
+      (lvl == 1) ? 'Easy' : (lvl == 2) ? 'Medium' : (lvl == 3) ? 'Hard' : '—';
 }

@@ -8,6 +8,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 
+import 'homepage.dart';
+
 class RecipeCreationScreen extends StatefulWidget {
   final Map<String, dynamic>? recipeData;
   final String? docId;
@@ -238,58 +240,68 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
   }
 
   Future<void> _uploadRecipe() async {
-    try {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid == null) throw 'You must be logged in';
+  try {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) throw 'You must be logged in';
 
-      // basic validation
-      if (recipeNameController.text.trim().isEmpty ||
-          durationController.text.trim().isEmpty ||
-          servingsController.text.trim().isEmpty ||
-          _imageBytes == null ||
-          ingredients.isEmpty ||
-          steps.isEmpty) {
-        _showSnackBar('Please complete all fields and upload an image.',
-            Colors.orange);
-        return;
-      }
-
-      _showSnackBar('Uploading recipe...', Colors.deepOrange);
-
-      final imageUrl = await _uploadToCloudinary(_imageBytes!);
-      if (imageUrl == null) throw 'Image upload failed';
-
-      final map = {
-        'userId': uid,
-        'title': recipeNameController.text.trim(),
-        'category': category,
-        'duration': '${durationController.text.trim()} $durationUnit',
-        'servings': servingsController.text.trim(),
-        'difficulty': difficulty.round(),
-        'spiciness': spiciness.round(),
-        'ingredients': ingredients,
-        'steps': steps,
-        'isPrivate': isPrivate,
-        'imageUrl': imageUrl,
-        'createdAt': FieldValue.serverTimestamp(),
-      };
-
-      if (widget.docId != null) {
-        await FirebaseFirestore.instance
-            .collection('recipes')
-            .doc(widget.docId)
-            .update(map);
-        _showSnackBar('Recipe updated!', Colors.green);
-      } else {
-        await FirebaseFirestore.instance.collection('recipes').add(map);
-        _showSnackBar('Recipe uploaded!', Colors.green);
-      }
-
-     Navigator.pop(context, 'refresh'); // bagi signal ke homepage
-    } catch (e) {
-      _showSnackBar('Error: $e', Colors.red);
+    // basic validation
+    if (recipeNameController.text.trim().isEmpty ||
+        durationController.text.trim().isEmpty ||
+        servingsController.text.trim().isEmpty ||
+        _imageBytes == null ||
+        ingredients.isEmpty ||
+        steps.isEmpty) {
+      _showSnackBar('Please complete all fields and upload an image.', Colors.orange);
+      return;
     }
+
+    _showSnackBar('Uploading recipe...', Colors.deepOrange);
+
+    final imageUrl = await _uploadToCloudinary(_imageBytes!);
+    if (imageUrl == null) throw 'Image upload failed';
+
+    final map = {
+      'userId': uid,
+      'title': recipeNameController.text.trim(),
+      'category': category,
+      'duration': '${durationController.text.trim()} $durationUnit',
+      'servings': servingsController.text.trim(),
+      'difficulty': difficulty.round(),
+      'spiciness': spiciness.round(),
+      'ingredients': ingredients,
+      'steps': steps,
+      'isPrivate': isPrivate,
+      'imageUrl': imageUrl,
+      'createdAt': FieldValue.serverTimestamp(),
+    };
+
+    if (widget.docId != null) {
+      await FirebaseFirestore.instance
+          .collection('recipes')
+          .doc(widget.docId)
+          .update(map);
+      _showSnackBar('Recipe updated!', Colors.green);
+    } else {
+      await FirebaseFirestore.instance.collection('recipes').add(map);
+      _showSnackBar('Recipe uploaded!', Colors.green);
+    }
+
+    // ✅ After upload, navigate accordingly
+    if (isPrivate) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const HomepageScreen()),
+        (Route<dynamic> route) => false,
+      );
+    } else {
+      Navigator.pop(context, 'refresh'); // back to community with signal
+    }
+
+  } catch (e) {
+    _showSnackBar('Error: $e', Colors.red);
   }
+}
+
 
   /* ───────────────────────────── BUILD ───────────────────────────── */
 
