@@ -124,13 +124,13 @@ class _HomepageScreenState extends State<HomepageScreen> {
   }
 
   Future<void> _loadFirebaseRecipes() async {
-    final snapshot =
-        await FirebaseFirestore.instance
-            .collection('recipes')
-            .orderBy('createdAt', descending: true)
-            .get();
+  final snapshot =
+      await FirebaseFirestore.instance
+          .collection('recipes')
+          .orderBy('createdAt', descending: true)
+          .get();
 
-    setState(() {
+  setState(() {
       firebaseRecipes =
           snapshot.docs.map((doc) {
             final data = doc.data();
@@ -142,6 +142,9 @@ class _HomepageScreenState extends State<HomepageScreen> {
               'userId': data['userId'] ?? '',
               'image': data['image'] ?? '',
               'servings': data['servings'] ?? '',
+              'duration': data['duration'] ?? '',
+              'spiciness': data['spiciness'] ?? 0,
+              'difficulty': data['difficulty'] ?? 1,
               'index': data['index'] ?? 0,
               'ingredients': data['ingredients'] ?? [],
               'steps': data['steps'] ?? [],
@@ -151,6 +154,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
           }).toList();
     });
   }
+
 
   List<Map<String, dynamic>> _getFilteredRecipes() {
     final List<Map<String, dynamic>> result = [];

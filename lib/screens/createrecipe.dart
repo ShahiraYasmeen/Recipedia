@@ -8,9 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 
-import 'homepage.dart';
 import 'package:recipedia/main.dart';
-// TODO: Ensure that BottomNavBarExample is defined in homepage.dart or import the correct file where it is defined.
 
 class RecipeCreationScreen extends StatefulWidget {
   final Map<String, dynamic>? recipeData;
