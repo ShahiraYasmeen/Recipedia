@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:recipedia/main.dart';
 import 'createrecipe.dart';
-import 'homepage.dart';
-
 
 class RecipeDetailPage extends StatefulWidget {
   final Map<String, dynamic> recipe;
@@ -27,12 +25,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         title: const Text('Confirm Delete'),
         content: const Text('Are you sure you want to delete this recipe?'),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
-          TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Delete', style: TextStyle(color: Colors.red))),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
         ],
       ),
     );
@@ -46,53 +40,34 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     );
 
     try {
-      await FirebaseFirestore.instance
-          .collection('recipes')
-          .doc(widget.docId)
-          .delete();
-
+      await FirebaseFirestore.instance.collection('recipes').doc(widget.docId).delete();
       if (!mounted) return;
-
       Navigator.pop(context); // close loader
-
-    Navigator.pushAndRemoveUntil(
-  context,
-  MaterialPageRoute(builder: (_) => const BottomNavBarExample()),
-  (route) => false,
-);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Recipe deleted successfully')),
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const BottomNavBarExample()),
+        (route) => false,
       );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Recipe deleted successfully')));
     } catch (e) {
       if (!mounted) return;
-      Navigator.pop(context); // close loader
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Delete failed: $e')),
-      );
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
     }
   }
 
   Future<void> _onEdit() async {
-    final doc = await FirebaseFirestore.instance
-        .collection('recipes')
-        .doc(widget.docId)
-        .get();
-
+    final doc = await FirebaseFirestore.instance.collection('recipes').doc(widget.docId).get();
     if (!doc.exists) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Recipe data not found.')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Recipe data not found.')));
       return;
     }
-
     if (!mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            RecipeCreationScreen(recipeData: doc.data()!, docId: widget.docId),
+        builder: (_) => RecipeCreationScreen(recipeData: doc.data()!, docId: widget.docId),
       ),
     );
   }
@@ -100,20 +75,17 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   @override
   Widget build(BuildContext context) {
     final recipe = widget.recipe;
-    final ingredients =
-        List<Map<String, dynamic>>.from(recipe['ingredients'] ?? []);
+    final ingredients = List<Map<String, dynamic>>.from(recipe['ingredients'] ?? []);
     final steps = List<String>.from(recipe['steps'] ?? []);
-    final spiciness = recipe['spiciness'] ?? 1;
-    final difficulty = recipe['difficulty'] ?? 1;
-
-    final duration = (recipe['duration'] ?? '').toString().trim();
+    final duration = recipe['duration'] ?? '—';
     final servings = recipe['servings'] ?? '';
+    final spiciness = recipe['spiciness'] ?? 0;
+    final difficulty = recipe['difficulty'] ?? 1;
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8F5),
       appBar: AppBar(
-        title: const Text('Recipe Detail',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Recipe Detail', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: const Color(0xFF8B0000),
         centerTitle: true,
         foregroundColor: Colors.white,
@@ -129,16 +101,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     bottomRight: Radius.circular(12),
                   ),
                   child: recipe['imageUrl']?.toString().startsWith('http') == true
-                      ? Image.network(recipe['imageUrl'],
-                          width: double.infinity,
-                          height: 250,
-                          fit: BoxFit.cover)
-                      : Image.asset(
-                          recipe['imageUrl'] ?? 'assets/placeholder.jpg',
-                          width: double.infinity,
-                          height: 250,
-                          fit: BoxFit.cover,
-                        ),
+                      ? Image.network(recipe['imageUrl'], width: double.infinity, height: 250, fit: BoxFit.cover)
+                      : Image.asset(recipe['imageUrl'] ?? 'assets/placeholder.jpg', width: double.infinity, height: 250, fit: BoxFit.cover),
                 ),
                 Positioned(
                   top: 16,
@@ -156,8 +120,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                       CircleAvatar(
                         backgroundColor: Colors.white,
                         child: IconButton(
-                          icon:
-                              const Icon(Icons.delete, color: Color(0xFF8B0000)),
+                          icon: const Icon(Icons.delete, color: Color(0xFF8B0000)),
                           onPressed: _onDelete,
                         ),
                       ),
@@ -171,9 +134,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(recipe['title'] ?? '',
-                      style: const TextStyle(
-                          fontSize: 22, fontWeight: FontWeight.bold)),
+                  Text(recipe['title'] ?? '', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   Row(
                     children: [
@@ -191,27 +152,20 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  const Text('Spiciness',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Spiciness', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 6),
                   Row(
                     children: List.generate(
-                      spiciness,
+                      _spicinessLevel(spiciness),
                       (_) => const Icon(Icons.whatshot, color: Colors.redAccent),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text('Ingredients',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Ingredients', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  ...ingredients.map((i) => Text(
-                      '- ${i['amount']} ${i['unit']} ${i['name']}')),
+                  ...ingredients.map((i) => Text('- ${i['amount']} ${i['unit']} ${i['name']}')),
                   const SizedBox(height: 20),
-                  const Text('Steps',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Steps', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   ...steps.asMap().entries.map((e) => Padding(
                         padding: const EdgeInsets.only(bottom: 6),
@@ -227,6 +181,15 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     );
   }
 
-  String _difficultyLabel(int lvl) =>
-      (lvl == 1) ? 'Easy' : (lvl == 2) ? 'Medium' : (lvl == 3) ? 'Hard' : '—';
+  String _difficultyLabel(int value) {
+    if (value <= 2) return 'Easy';
+    if (value <= 4) return 'Medium';
+    return 'Hard';
+  }
+
+  int _spicinessLevel(int value) {
+    if (value <= 1) return 0;
+    if (value == 3) return 2;
+    return 3;
+  }
 }
