@@ -240,10 +240,18 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
     return null;
   }
 
-  Future<void> _uploadRecipe() async {
+Future<void> _uploadRecipe() async {
   try {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final user = FirebaseAuth.instance.currentUser;
+    final uid = user?.uid;
+
     if (uid == null) throw 'You must be logged in';
+
+    // ✅ Fetch user's name from Firestore
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    final userName = userDoc.exists && userDoc.data()!.containsKey('name')
+        ? userDoc['name']
+        : 'Anonymous';
 
     // basic validation
     if (recipeNameController.text.trim().isEmpty ||
@@ -263,6 +271,7 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
 
     final map = {
       'userId': uid,
+      'author': userName, // ✅ Corrected here
       'title': recipeNameController.text.trim(),
       'category': category,
       'duration': '${durationController.text.trim()} $durationUnit',
@@ -289,11 +298,11 @@ class _RecipeCreationScreenState extends State<RecipeCreationScreen> {
 
     // ✅ After upload, navigate accordingly
     if (isPrivate) {
-    Navigator.pushAndRemoveUntil(
-  context,
-  MaterialPageRoute(builder: (_) => const BottomNavBarExample()),
-  (route) => false,
-);
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const BottomNavBarExample()),
+        (route) => false,
+      );
     } else {
       Navigator.pop(context, 'refresh'); // back to community with signal
     }

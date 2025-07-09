@@ -100,7 +100,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                     if (_name != null && _name!.isNotEmpty)
                       Center(
                         child: Text(
-                          _name!,
+                           _name != null && _name!.isNotEmpty ? _name! : "No name set",
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,

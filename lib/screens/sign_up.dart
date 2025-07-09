@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'login.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -18,18 +19,32 @@ class _SignupScreenState extends State<SignupScreen> {
 
   void _signup() async {
     try {
-      await _auth.createUserWithEmailAndPassword(
+      final userCredential = await _auth.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
+
+      final uid = userCredential.user?.uid;
+      final username = usernameController.text.trim();
+
+
+      if (uid != null && username.isNotEmpty) {
+        await FirebaseFirestore.instance.collection('users').doc(uid).set({
+          'username': usernameController.text.trim(),
+          'email': emailController.text.trim(),
+          'name' : username,
+          'createdAt': Timestamp.now(),
+        });
+      }
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Signup failed: ${e.toString()}")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Signup failed: ${e.toString()}")));
     }
   }
 
@@ -118,7 +133,9 @@ class _SignupScreenState extends State<SignupScreen> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const LoginScreen(),
+                          ),
                         );
                       },
                       child: RichText(
@@ -138,10 +155,10 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),

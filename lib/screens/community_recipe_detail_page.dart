@@ -1,9 +1,10 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'createrecipe.dart';
 
 class CommunityRecipeDetailPage extends StatefulWidget {
   final Map<String, dynamic> recipe;
@@ -18,20 +19,36 @@ class CommunityRecipeDetailPage extends StatefulWidget {
   });
 
   @override
-  State<CommunityRecipeDetailPage> createState() =>
-      _CommunityRecipeDetailPageState();
+  State<CommunityRecipeDetailPage> createState() => _CommunityRecipeDetailPageState();
 }
 
-class _CommunityRecipeDetailPageState
-    extends State<CommunityRecipeDetailPage> {
+class _CommunityRecipeDetailPageState extends State<CommunityRecipeDetailPage> {
   bool isSaved = false;
   String? userId;
+  bool isOwner = false;
+  String formattedDate = '';
 
   @override
   void initState() {
     super.initState();
     userId = FirebaseAuth.instance.currentUser?.uid;
     _checkIfSaved();
+    _checkIfOwner();
+    _formatTimestamp();
+  }
+
+  void _checkIfOwner() {
+    if (userId == widget.recipe['userId']) {
+      setState(() => isOwner = true);
+    }
+  }
+
+  void _formatTimestamp() {
+    final ts = widget.recipe['createdAt'];
+    if (ts != null && ts is Timestamp) {
+      final date = ts.toDate();
+      formattedDate = DateFormat.yMMMd().add_jm().format(date);
+    }
   }
 
   Future<void> _checkIfSaved() async {
@@ -48,27 +65,96 @@ class _CommunityRecipeDetailPageState
     }
   }
 
+  Future<void> _deleteRecipe() async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('recipes')
+          .doc(widget.recipe['id'])
+          .delete();
+
+      Navigator.pop(context, 'refresh');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Recipe deleted')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Delete failed: $e')),
+      );
+    }
+  }
+
+  void _editRecipe() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RecipeCreationScreen(
+          recipeData: widget.recipe,
+          docId: widget.recipe['id'],
+        ),
+      ),
+    );
+
+    if (result == 'refresh') {
+      Navigator.pop(context, 'refresh');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final recipe = widget.recipe;
-    final List<String> ingredients = List<String>.from(recipe['ingredients'] ?? []);
-    final List<String> steps = List<String>.from(recipe['steps'] ?? []) ;
 
+    final List<String> ingredients = (recipe['ingredients'] as List<dynamic>?)
+            ?.map((i) => i is Map
+                ? '${i['amount']} ${i['unit']} ${i['name']}'
+                : i.toString())
+            .toList() ??
+        [];
+
+    final List<String> steps = List<String>.from(recipe['steps'] ?? []);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Recipe Detail',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Recipe Detail'),
         backgroundColor: const Color(0xFF8B0000),
-        centerTitle: true,
         foregroundColor: Colors.white,
+        actions: isOwner
+            ? [
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: _editRecipe,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        title: const Text('Delete Recipe?'),
+                        content: const Text('Are you sure you want to delete this recipe?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _deleteRecipe();
+                            },
+                            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ]
+            : null,
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Image with save button
+            // Image
             Stack(
               children: [
                 ClipRRect(
@@ -76,66 +162,64 @@ class _CommunityRecipeDetailPageState
                     bottomLeft: Radius.circular(12),
                     bottomRight: Radius.circular(12),
                   ),
-                  child: Image.asset(
-                    recipe['image'] ?? 'assets/placeholder.jpg',
+                  child: Image(
+                    image: (recipe['imageUrl'] != null &&
+                            recipe['imageUrl'].toString().startsWith('http'))
+                        ? NetworkImage(recipe['imageUrl'])
+                        : AssetImage(recipe['image'] ?? 'assets/placeholder.jpg')
+                            as ImageProvider,
                     width: double.infinity,
                     height: 250,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.broken_image, size: 100),
                   ),
                 ),
                 Positioned(
                   top: 16,
                   right: 16,
-                  child: Column(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: Colors.white,
-                        child: IconButton(
-                          icon: Icon(
-                            isSaved
-                                ? Icons.bookmark
-                                : Icons.bookmark_border,
-                            color: const Color(0xFF8B0000),
-                          ),
-                          onPressed: () async {
-                            final uid = FirebaseAuth.instance.currentUser?.uid;
-                            final docRef = FirebaseFirestore.instance
-                                .collection('users')
-                                .doc(uid)
-                                .collection('saved_recipes')
-                                .doc(widget.recipe['title']); // unique id
-
-                            final doc = await docRef.get();
-
-                            if (doc.exists) {
-                              await docRef.delete();
-                              setState(() => isSaved = false);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Recipe unsaved'), duration: Duration(seconds: 2)),
-                              );
-                            } else {
-                              await docRef.set({
-                                'title': widget.recipe['title'],
-                                'image': widget.recipe['image'],
-                                'author': widget.recipe['author'],
-                                'duration': widget.recipe['duration'],
-                                'difficulty': widget.recipe['difficulty'],
-                                'servings': widget.recipe['servings'],
-                                'ingredients': List<String>.from(widget.recipe['ingredients'] ?? []),
-                                'steps': List<String>.from(widget.recipe['steps'] ?? []),
-                                'category': widget.recipe['category'] ?? 'Main Course',
-                              });
-                              setState(() => isSaved = true);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Recipe saved'), duration: Duration(seconds: 2)),
-                              );
-                            }
-                          },
-                        ),
+                  child: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: IconButton(
+                      icon: Icon(
+                        isSaved ? Icons.bookmark : Icons.bookmark_border,
+                        color: const Color(0xFF8B0000),
                       ),
-                    ],
+                      onPressed: () async {
+                        final uid = FirebaseAuth.instance.currentUser?.uid;
+                        if (uid == null) return;
+
+                        final docRef = FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(uid)
+                            .collection('saved_recipes')
+                            .doc(recipe['title']);
+
+                        final doc = await docRef.get();
+
+                        if (doc.exists) {
+                          await docRef.delete();
+                          setState(() => isSaved = false);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Recipe unsaved')),
+                          );
+                        } else {
+                          await docRef.set({
+                            'title': recipe['title'],
+                            'author': recipe['author'],
+                            'image': recipe['imageUrl'] ?? recipe['image'],
+                            'duration': recipe['duration'],
+                            'difficulty': recipe['difficulty'],
+                            'servings': recipe['servings'],
+                            'ingredients': recipe['ingredients'],
+                            'steps': recipe['steps'],
+                            'category': recipe['category'],
+                          });
+                          setState(() => isSaved = true);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Recipe saved')),
+                          );
+                        }
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -143,18 +227,21 @@ class _CommunityRecipeDetailPageState
 
             // Details
             Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     recipe['title'] ?? '',
-                    style: const TextStyle(
-                        fontSize: 22, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
                   Text("By ${recipe['author'] ?? 'Unknown'}"),
+                  if (formattedDate.isNotEmpty)
+                    Text(
+                      'Posted on $formattedDate',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
@@ -164,7 +251,7 @@ class _CommunityRecipeDetailPageState
                       const SizedBox(width: 16),
                       const Icon(Icons.local_fire_department, size: 16),
                       const SizedBox(width: 4),
-                      Text(recipe['difficulty'] ?? ''),
+                      Text(recipe['difficulty'].toString()),
                       const SizedBox(width: 16),
                       const Icon(Icons.people, size: 16),
                       const SizedBox(width: 4),
@@ -172,20 +259,11 @@ class _CommunityRecipeDetailPageState
                     ],
                   ),
                   const SizedBox(height: 20),
-                  const Text(
-                    'Ingredients',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  const Text('Ingredients', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   ...ingredients.map((item) => Text('- $item')),
-
                   const SizedBox(height: 20),
-                  const Text(
-                    'Steps',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  const Text('Steps', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   ...steps.asMap().entries.map(
                         (entry) => Padding(
