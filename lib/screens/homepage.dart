@@ -53,6 +53,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
         'id': doc.id,
         'title': data['title'],
         'image': data['image'],
+        ...data, // <-- include all fields from Firestore
         'cat': 'Saved',
         'ingredients': data['ingredients'] ?? [],
         'steps': data['steps'] ?? [],
