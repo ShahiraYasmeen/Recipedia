@@ -297,15 +297,11 @@ Future<void> _uploadRecipe() async {
     }
 
     // ✅ After upload, navigate accordingly
-    if (isPrivate) {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const BottomNavBarExample()),
         (route) => false,
       );
-    } else {
-      Navigator.pop(context, 'refresh'); // back to community with signal
-    }
 
   } catch (e) {
     _showSnackBar('Error: $e', Colors.red);
@@ -318,15 +314,22 @@ Future<void> _uploadRecipe() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF6F0),
       appBar: AppBar(
-        title: const Text('Create New Recipe'),
+        title: const Text('Recipedia'),
+        centerTitle: true,
         backgroundColor: const Color(0xFF8B0000),
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Padding(
+          padding: EdgeInsets.only(top: 8.0, bottom: 12.0),
+          child: Text(
+            "Create a New Recipe",
+            style: TextStyle(fontSize: 20, color: Color(0xFF8B0000)),
+          ),
+        ),
           /* ─── image preview ─── */
           _imageBytes != null
               ? ClipRRect(

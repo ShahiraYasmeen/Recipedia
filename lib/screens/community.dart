@@ -94,16 +94,23 @@ class _CommunityScreenState extends State<CommunityScreen> {
     final recipes = getFilteredRecipes();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8F5),
       appBar: AppBar(
-        title: const Text('Recipedia', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF8B0000),
+        title: const Text('Recipedia'),
         centerTitle: true,
+        backgroundColor: const Color(0xFF8B0000),
+        foregroundColor: Colors.white,
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 15),
+      const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: Text(
+          "Share with others",
+          style: TextStyle(fontSize: 20, color: Color(0xFF8B0000)),
+        ),
+      ),
           Stack(
             children: [
               SizedBox(

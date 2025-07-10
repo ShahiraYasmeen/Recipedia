@@ -66,24 +66,26 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF6F0),
       appBar: AppBar(
-        title: const Text("Profile", style: TextStyle(color: Colors.white)),
+        title: const Text('Recipedia'),
+        centerTitle: true,
         backgroundColor: const Color(0xFF8B0000),
-        titleTextStyle: const TextStyle(
-          color: Colors.white,
-          fontSize: 30,
-          fontWeight: FontWeight.w500,
-        ),
+        foregroundColor: Colors.white,
       ),
-      body:
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : SafeArea(
-                child:  ListView(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  children: [
-                    const SizedBox(height: 60),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
+              child: ListView(
+                padding: const EdgeInsets.only(bottom: 16),
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 8, 16, 12), // top = 8, bottom = 12
+                    child: Text(
+                      "View Profile",
+                      style: TextStyle(fontSize: 20, color: Color(0xFF8B0000)),
+                    ),
+                  ),
+                    const SizedBox(height: 30),
                     Center(
                       child: CircleAvatar(
                         radius: 50,
