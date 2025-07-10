@@ -68,7 +68,6 @@ class _LikedRecipeScreenState extends State<LikedRecipeScreen> {
                     final imageUrl = recipe['imageUrl']?.toString() ?? recipe['imageUrl']?.toString() ?? '';
                     final isNetworkImage = imageUrl.startsWith('http');
 
-
                     return GestureDetector(
                       onTap: () {
                         Navigator.push(

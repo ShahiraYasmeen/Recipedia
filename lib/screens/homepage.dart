@@ -29,6 +29,31 @@ class _HomepageScreenState extends State<HomepageScreen> {
   List<Map<String, dynamic>> firebaseRecipes = [];
   List<Map<String, dynamic>> savedCommunityRecipes = [];
 
+  Future<List<Map<String, dynamic>>> fetchSavedCommunityRecipes() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return [];
+
+    final snapshot =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .collection('saved_recipes')
+            .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return {
+        'id': doc.id,
+        'title': data['title'],
+        'image': data['image'],
+        ...data, // <-- include all fields from Firestore
+        'cat': 'Saved',
+        'ingredients': data['ingredients'] ?? [],
+        'steps': data['steps'] ?? [],
+      };
+    }).toList();
+  }
+
   @override
   void initState() {
     super.initState();
