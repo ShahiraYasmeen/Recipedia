@@ -1,11 +1,7 @@
-// Updated HomepageScreen with safe casting, full recipe saving, and image fallback
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'recipe_detail_page.dart';
-// ignore: unused_import
-import 'recipe_data.dart';
 import 'community_recipe_detail_page.dart';
 
 class HomepageScreen extends StatefulWidget {
@@ -49,12 +45,16 @@ class _HomepageScreenState extends State<HomepageScreen> {
         .get();
 
     setState(() {
-      firebaseRecipes = snapshot.docs.map((doc) {
-        final data = doc.data();
-        return {'id': doc.id, ...data};
-      }).toList();
-    });
-  }
+    firebaseRecipes = snapshot.docs.map((doc) {
+      final data = doc.data();
+      return {
+        'id': doc.id,
+        ...data,
+        'cat': data['category'] ?? '', // ✅ map field 'category' ke 'cat'
+      };
+    }).toList();
+  });
+}
 
   Future<void> _loadSavedRecipes() async {
     final snap = await FirebaseFirestore.instance
@@ -114,12 +114,13 @@ class _HomepageScreenState extends State<HomepageScreen> {
     for (var recipe in firebaseRecipes) {
       final isPrivate = recipe['isPrivate'] == true;
       final isSaved = savedRecipes.contains(recipe['id']);
+      final cat = recipe['cat']?.toString().toLowerCase() ?? '';
 
       if (selectedCategory == 'Saved' && isSaved) {
         if (addedIds.add(recipe['id'])) result.add(recipe);
       } else if (selectedCategory == 'All') {
         if (addedIds.add(recipe['id'])) result.add(recipe);
-      } else if (selectedCategory == recipe['cat'] &&
+      } else if (selectedCategory.toLowerCase() == cat &&
           (!isPrivate || recipe['userId'] == uid)) {
         if (addedIds.add(recipe['id'])) result.add(recipe);
       }
@@ -160,11 +161,12 @@ class _HomepageScreenState extends State<HomepageScreen> {
                   child: GestureDetector(
                     onTap: () => setState(() => selectedCategory = cat),
                     child: Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 10),
                       decoration: BoxDecoration(
-                        color:
-                            isSelected ? const Color(0xFF8B0000) : Colors.transparent,
+                        color: isSelected
+                            ? const Color(0xFF8B0000)
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: isSelected
                             ? [
@@ -178,7 +180,8 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       ),
                       child: Text(cat,
                           style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.black)),
+                              color:
+                                  isSelected ? Colors.white : Colors.black)),
                     ),
                   ),
                 );
@@ -196,8 +199,8 @@ class _HomepageScreenState extends State<HomepageScreen> {
             child: recipes.isEmpty
                 ? const Center(child: Text("No recipes found."))
                 : GridView.builder(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 15, vertical: 10),
                     itemCount: recipes.length,
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
