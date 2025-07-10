@@ -65,9 +65,8 @@ class _LikedRecipeScreenState extends State<LikedRecipeScreen> {
 
                     final steps = (recipe['steps'] as List<dynamic>? ?? []).map((s) => s.toString()).toList();
 
-                    final imageUrl = recipe['image']?.toString() ?? recipe['imageUrl']?.toString() ?? '';
+                    final imageUrl = recipe['imageUrl']?.toString() ?? recipe['image']?.toString() ?? '';
                     final isNetworkImage = imageUrl.startsWith('http');
-
 
                     return GestureDetector(
                       onTap: () {
