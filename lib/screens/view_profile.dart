@@ -190,7 +190,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                        );
                      }),
 
-                    const Spacer(),
+                    const SizedBox(height: 30),
 
                     Padding(
                       padding: const EdgeInsets.all(16.0),

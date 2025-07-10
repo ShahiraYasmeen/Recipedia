@@ -103,14 +103,14 @@ class _CommunityRecipeDetailPageState extends State<CommunityRecipeDetailPage> {
   Widget build(BuildContext context) {
     final recipe = widget.recipe;
 
-    final List<String> ingredients = (recipe['ingredients'] as List<dynamic>?)
-            ?.map((i) => i is Map
-                ? '${i['amount']} ${i['unit']} ${i['name']}'
-                : i.toString())
-            .toList() ??
-        [];
+    final List<String> ingredients = (recipe['ingredients'] as List<dynamic>? ?? [])
+        .map((i) {
+          if (i is String) return i;
+          if (i is Map) return '${i['amount']} ${i['unit']} ${i['name']}';
+          return i.toString();
+        }).toList();
 
-    final List<String> steps = List<String>.from(recipe['steps'] ?? []);
+    final List<String> steps = (recipe['steps'] as List<dynamic>? ?? []).map((s) => s.toString()).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -119,10 +119,7 @@ class _CommunityRecipeDetailPageState extends State<CommunityRecipeDetailPage> {
         foregroundColor: Colors.white,
         actions: isOwner
             ? [
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: _editRecipe,
-                ),
+                IconButton(icon: const Icon(Icons.edit), onPressed: _editRecipe),
                 IconButton(
                   icon: const Icon(Icons.delete),
                   onPressed: () {
@@ -132,10 +129,7 @@ class _CommunityRecipeDetailPageState extends State<CommunityRecipeDetailPage> {
                         title: const Text('Delete Recipe?'),
                         content: const Text('Are you sure you want to delete this recipe?'),
                         actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Cancel'),
-                          ),
+                          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
                           TextButton(
                             onPressed: () {
                               Navigator.pop(context);
@@ -154,7 +148,6 @@ class _CommunityRecipeDetailPageState extends State<CommunityRecipeDetailPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Image
             Stack(
               children: [
                 ClipRRect(
@@ -162,15 +155,29 @@ class _CommunityRecipeDetailPageState extends State<CommunityRecipeDetailPage> {
                     bottomLeft: Radius.circular(12),
                     bottomRight: Radius.circular(12),
                   ),
-                  child: Image(
-                    image: (recipe['imageUrl'] != null &&
-                            recipe['imageUrl'].toString().startsWith('http'))
-                        ? NetworkImage(recipe['imageUrl'])
-                        : AssetImage(recipe['image'] ?? 'assets/placeholder.jpg')
-                            as ImageProvider,
-                    width: double.infinity,
-                    height: 250,
-                    fit: BoxFit.cover,
+                  child: Builder(
+                    builder: (context) {
+                      final image1 = recipe['imageUrl']?.toString() ?? '';
+                      final image2 = recipe['image']?.toString() ?? '';
+                      ImageProvider imageProvider;
+
+                      if (image1.startsWith('http')) {
+                        imageProvider = NetworkImage(image1);
+                      } else if (image2.startsWith('http')) {
+                        imageProvider = NetworkImage(image2);
+                      } else {
+                        imageProvider = const AssetImage('assets/placeholder.jpg');
+                      }
+
+                      return Image(
+                        image: imageProvider,
+                        width: double.infinity,
+                        height: 250,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.broken_image, size: 80, color: Colors.grey),
+                      );
+                    },
                   ),
                 ),
                 Positioned(
@@ -225,23 +232,16 @@ class _CommunityRecipeDetailPageState extends State<CommunityRecipeDetailPage> {
               ],
             ),
 
-            // Details
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    recipe['title'] ?? '',
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
+                  Text(recipe['title'] ?? '', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 6),
                   Text("By ${recipe['author'] ?? 'Unknown'}"),
                   if (formattedDate.isNotEmpty)
-                    Text(
-                      'Posted on $formattedDate',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
+                    Text('Posted on $formattedDate', style: const TextStyle(fontSize: 12, color: Colors.grey)),
                   const SizedBox(height: 12),
                   Row(
                     children: [
@@ -265,12 +265,10 @@ class _CommunityRecipeDetailPageState extends State<CommunityRecipeDetailPage> {
                   const SizedBox(height: 20),
                   const Text('Steps', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  ...steps.asMap().entries.map(
-                        (entry) => Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: Text('${entry.key + 1}. ${entry.value}'),
-                        ),
-                      ),
+                  ...steps.asMap().entries.map((entry) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Text('${entry.key + 1}. ${entry.value}'),
+                      )),
                 ],
               ),
             ),

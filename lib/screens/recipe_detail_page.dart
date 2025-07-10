@@ -75,12 +75,30 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   @override
   Widget build(BuildContext context) {
     final recipe = widget.recipe;
-    final ingredients = List<Map<String, dynamic>>.from(recipe['ingredients'] ?? []);
-    final steps = List<String>.from(recipe['steps'] ?? []);
+
+    final ingredients = (recipe['ingredients'] as List<dynamic>? ?? []).map((i) {
+      if (i is String) return i;
+      if (i is Map) return '${i['amount']} ${i['unit']} ${i['name']}';
+      return i.toString();
+    }).toList();
+
+    final steps = (recipe['steps'] as List<dynamic>? ?? []).map((s) => s.toString()).toList();
+
     final duration = recipe['duration'] ?? '—';
-    final servings = recipe['servings'] ?? '';
-    final spiciness = recipe['spiciness'] ?? 0;
+    final servings = recipe['servings']?.toString() ?? '1';
     final difficulty = recipe['difficulty'] ?? 1;
+
+    final imageUrl = recipe['imageUrl'];
+    final imageAsset = recipe['image'];
+
+    ImageProvider imageProvider;
+    if (imageUrl != null && imageUrl.toString().startsWith('http')) {
+      imageProvider = NetworkImage(imageUrl);
+    } else if (imageAsset != null && imageAsset.toString().startsWith('http')) {
+      imageProvider = NetworkImage(imageAsset);
+    } else {
+      imageProvider = const NetworkImage('https://via.placeholder.com/600x400?text=No+Image');
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8F5),
@@ -100,9 +118,12 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     bottomLeft: Radius.circular(12),
                     bottomRight: Radius.circular(12),
                   ),
-                  child: recipe['imageUrl']?.toString().startsWith('http') == true
-                      ? Image.network(recipe['imageUrl'], width: double.infinity, height: 250, fit: BoxFit.cover)
-                      : Image.asset(recipe['imageUrl'] ?? 'assets/placeholder.jpg', width: double.infinity, height: 250, fit: BoxFit.cover),
+                  child: Image(
+                    image: imageProvider,
+                    width: double.infinity,
+                    height: 250,
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 Positioned(
                   top: 16,
@@ -152,18 +173,9 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  const Text('Spiciness', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: List.generate(
-                      _spicinessLevel(spiciness),
-                      (_) => const Icon(Icons.whatshot, color: Colors.redAccent),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
                   const Text('Ingredients', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  ...ingredients.map((i) => Text('- ${i['amount']} ${i['unit']} ${i['name']}')),
+                  ...ingredients.map((i) => Text('- $i')),
                   const SizedBox(height: 20),
                   const Text('Steps', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
@@ -185,11 +197,5 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     if (value <= 2) return 'Easy';
     if (value <= 4) return 'Medium';
     return 'Hard';
-  }
-
-  int _spicinessLevel(int value) {
-    if (value <= 1) return 0;
-    if (value == 3) return 2;
-    return 3;
   }
 }

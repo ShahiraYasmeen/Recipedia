@@ -33,11 +33,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
     fetchLikedRecipes();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollController.animateTo(
-        30,
-        duration: const Duration(milliseconds: 800),
-        curve: Curves.easeInOut,
-      );
+      _scrollController.animateTo(30,
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOut);
       Future.delayed(const Duration(seconds: 3), () {
         if (mounted) setState(() => _showScrollHint = false);
       });
@@ -51,17 +49,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
         .get();
 
     setState(() {
-      publicRecipes = snap.docs
-          .map((doc) {
-            final data = doc.data();
-            if (data['isPrivate'] == false || !data.containsKey('isPrivate')) {
-              data['id'] = doc.id;
-              return data;
-            }
-            return null;
-          })
-          .whereType<Map<String, dynamic>>()
-          .toList();
+      publicRecipes = snap.docs.map((doc) {
+        final data = doc.data();
+        if (data['isPrivate'] == false || !data.containsKey('isPrivate')) {
+          data['id'] = doc.id;
+          return data;
+        }
+        return null;
+      }).whereType<Map<String, dynamic>>().toList();
     });
   }
 
@@ -104,13 +99,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 15),
-      const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: Text(
-          "Share with others",
-          style: TextStyle(fontSize: 20, color: Color(0xFF8B0000)),
-        ),
-      ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Text("Share with others",
+                style: TextStyle(fontSize: 20, color: Color(0xFF8B0000))),
+          ),
           Stack(
             children: [
               SizedBox(
@@ -125,11 +118,15 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     return Padding(
                       padding: const EdgeInsets.only(right: 10),
                       child: GestureDetector(
-                        onTap: () => setState(() => selectedCategoryIndex = index),
+                        onTap: () =>
+                            setState(() => selectedCategoryIndex = index),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 10),
                           decoration: BoxDecoration(
-                            color: isSelected ? const Color(0xFF8B0000) : Colors.transparent,
+                            color: isSelected
+                                ? const Color(0xFF8B0000)
+                                : Colors.transparent,
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: isSelected
                                 ? [
@@ -169,7 +166,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
                         color: Colors.white70,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.black54),
+                      child: const Icon(Icons.arrow_forward_ios,
+                          size: 16, color: Colors.black54),
                     ),
                   ),
                 ),
@@ -198,10 +196,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
                         builder: (_) => CommunityRecipeDetailPage(
                           recipe: r,
                           ingredients: List<String>.from(
-                            r['ingredients']?.map(
-                                  (i) => '${i['amount']} ${i['unit']} ${i['name']}',
-                                ) ??
-                                [],
+                            (r['ingredients'] as List<dynamic>? ?? []).map((i) {
+                              if (i is String) return i;
+                              if (i is Map) {
+                                return '${i['amount']} ${i['unit']} ${i['name']}';
+                              }
+                              return i.toString();
+                            }),
                           ),
                           steps: List<String>.from(r['steps'] ?? []),
                         ),
@@ -211,7 +212,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     if (result == 'refresh') fetchPublicRecipes();
                   },
                   child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 8),
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -228,9 +230,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(10),
-                          child: imageUrl != null && imageUrl.toString().startsWith('http')
-                              ? Image.network(imageUrl, width: 100, height: 100, fit: BoxFit.cover)
-                              : Image.asset('assets/default_image.png', width: 100, height: 100),
+                          child: (imageUrl != null &&
+                                  imageUrl.toString().startsWith('http'))
+                              ? Image.network(imageUrl,
+                                  width: 100, height: 100, fit: BoxFit.cover)
+                              : Image.asset('assets/default_image.png',
+                                  width: 100, height: 100),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -239,17 +244,17 @@ class _CommunityScreenState extends State<CommunityScreen> {
                             children: [
                               Text(
                                 r['title'] ?? 'Untitled',
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
                               ),
                               const SizedBox(height: 4),
-                              Text(
-                                r['author'] ?? 'Unknown',
-                                style: const TextStyle(color: Colors.grey),
-                              ),
+                              Text(r['author'] ?? 'Unknown',
+                                  style: const TextStyle(color: Colors.grey)),
                               const SizedBox(height: 4),
                               Text(
-                                '${r['duration']} • Difficulty: ${r['difficulty'].toString()} • ${r['servings']} servings',
-                                style: const TextStyle(fontSize: 12, color: Colors.black54),
+                                '${r['duration'] ?? '-'} • Difficulty: ${r['difficulty'] ?? 1} • ${r['servings'] ?? '-'} servings',
+                                style: const TextStyle(
+                                    fontSize: 12, color: Colors.black54),
                               ),
                             ],
                           ),
@@ -258,11 +263,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
                           children: [
                             IconButton(
                               icon: Icon(
-                                isLiked ? Icons.favorite : Icons.favorite_border,
+                                isLiked
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
                                 color: isLiked ? Colors.red : Colors.grey,
                               ),
                               onPressed: () async {
-                                final user = FirebaseAuth.instance.currentUser;
+                                final user =
+                                    FirebaseAuth.instance.currentUser;
                                 if (user == null) return;
 
                                 final docRef = FirebaseFirestore.instance
@@ -290,19 +298,16 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                     await docRef.set({
                                       'title': r['title'],
                                       'author': r['author'],
-                                      'image': r['imageUrl'],
-                                      'duration': r['duration'],
-                                      'difficulty': r['difficulty'],
-                                      'servings': r['servings'],
-                                      'ingredients': List<String>.from(
-                                        r['ingredients']?.map(
-                                              (i) =>
-                                                  '${i['amount']} ${i['unit']} ${i['name']}',
-                                            ) ??
-                                            [],
-                                      ),
-                                      'steps': List<String>.from(r['steps'] ?? []),
-                                      'likedAt': FieldValue.serverTimestamp(),
+                                      'imageUrl': r['imageUrl'] ?? '',
+                                      'image': r['image'] ?? '',
+                                      'duration': r['duration'] ?? '',
+                                      'difficulty': r['difficulty'] ?? 1,
+                                      'servings': r['servings'] ?? '',
+                                      'ingredients': r['ingredients'] ?? [],
+                                      'steps': r['steps'] ?? [],
+                                      'category': r['category'] ?? '',
+                                      'createdAt': r['createdAt'],
+                                      'userId': r['userId'] ?? '',
                                     });
                                     await recipeRef.update({
                                       'likes': FieldValue.increment(1),
@@ -318,7 +323,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                 }
                               },
                             ),
-                            Text('${r['likes'] ?? 0}', style: const TextStyle(fontSize: 12)),
+                            Text('${r['likes'] ?? 0}',
+                                style: const TextStyle(fontSize: 12)),
                           ],
                         ),
                       ],
